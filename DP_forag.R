@@ -1,3 +1,5 @@
+# Older script, kept as backup
+
 ################### R skript DP ########################
 setwd("E:/SYNC/DP")
 require(tidyverse)

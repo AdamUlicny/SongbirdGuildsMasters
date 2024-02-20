@@ -17,10 +17,9 @@ library(ggrepel)
 ################ Importing data ################
 
 setwd(dirname(getActiveDocumentContext()$path))
-data_all <- read_excel("behav_data_23.xlsx")
-data_bodovka <- read_excel("bodovka_data_23.xlsx")
-data_lit<-read_excel("literature_data.xlsx")
-
+data_all <- read_excel("./data/behav_data_23.xlsx")
+data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
+data_lit<-read_excel("./data/literature_data.xlsx")
 
 ############# Data wrangling ##################
 
@@ -128,6 +127,7 @@ treemap_behav<-treemap(data_freq_behav,
 
 data_freq_compare<-merge(data_freq_bodovka, data_freq_behav, by="druh", all=TRUE)
 
+## proporce druhu na bodovce vs pozorování
 ggplot(data_freq_compare) +
   aes(x = prop_behav, y = prop_bodovka) +
   geom_point(
@@ -328,10 +328,6 @@ abline(c(0,1), lty=2, col="red")
 
 summary(lm(BaS ~ BaM, index_subset))
 
-?lm
-
-
-
 
 ################# Disimilarity matrices ###############################
 
@@ -395,7 +391,7 @@ dist_lit_substrate <- as.matrix(dist_lit_substrate)
 dist_lit_substrate <- as.dist(dist_lit_substrate[order(rownames(dist_lit_substrate)),order(colnames(dist_lit_substrate))])
 
 #################### Morpho data ###############################
-data_morfo <- read_xlsx("morfo_data.xlsx")
+data_morfo <- read_xlsx("./data/morfo_data.xlsx")
 
 ### drop unused columns
 data_morfo_matrix <- data_morfo %>%
@@ -430,7 +426,7 @@ dendro_morfo<-dist_morfo %>%
 
 ### Importing trees
 
-phylo_data <- "output.nex"
+phylo_data <- "./resources/output.nex"
 phylo_data<-ape::read.nexus(phylo_data)
 
 ### Selecting best tree
@@ -663,9 +659,3 @@ model<-lm(index$BaS ~ index$BaM)
 summary (model)
 
 summary(lm(index_subset$BaS ~ index_subset$BaM))
-
-
-
-
-
-
