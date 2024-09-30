@@ -31,7 +31,7 @@ There are multiple kinds of datasets included
 ![poster](resources/poster_v4.png)
 
 	
-On the side I'm learning to create attractive 3D maps of the area using **rayshader**
+On the side I'm learning to create attractive 3D maps of the area using **rayshader** based off tutorials by https://github.com/milos-agathon
 
 example:
 ![3d_land_cover_map](resources/3d_CZ_land_cover.png)

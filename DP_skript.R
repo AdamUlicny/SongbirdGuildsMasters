@@ -66,7 +66,7 @@ data_lit_substrate <- data_lit %>%
   select(species_orig, air, bark, flower, ground, leaf, other)%>%
   pivot_longer(cols=c("air","bark","flower","ground","leaf","other"), names_to="substrate",values_to="x")
 
-### point transect, unite columns, remove non-oscines, count observations
+### point transect, unite columns, remove non-passerines and corvids, count observations
 data_bodovka_sp <- data_bodovka %>%
   unite(col = "druh", Genus, Species, sep= "_", remove =TRUE) %>%
   group_by(Datum, druh)%>%
