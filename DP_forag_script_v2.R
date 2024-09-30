@@ -1,7 +1,7 @@
 ################################### Guild structure of a passerine assemblage in a Czech lowland deciduous forest ##############################
 ################## Libraries #################
 
-#packages_to_install <- c("tidyverse", "ape", "vegan", "png","dendextend", "readxl", "patchwork", "treemap", "plotly")
+#packages_to_install <- c("tidyverse", "ape", "vegan", "png","dendextend", "readxl", "patchwork", "treemap", "Rtapas")
 #install.packages(packages_to_install)
 library(tidyverse)
 library(readxl)
@@ -12,12 +12,13 @@ library(patchwork)
 library(rstudioapi)
 library(treemap)
 library(ggrepel)
-
+library(Rtapas)
 
 ################ Importing data ################
 
 setwd(dirname(getActiveDocumentContext()$path))
 data_23 <- read_excel("./data/behav_data_23.xlsx")
+data_24 <- read_excel("./data/behav_data_24.xlsx")
 data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
 data_lit<-read_excel("./data/literature_data.xlsx")
 
@@ -28,22 +29,34 @@ data_behav_23 <- data_23 %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   pivot_longer(cols = c("behavior_1", "behavior_2", "behavior_3", "behavior_4", "behavior_5"), 
-  names_to = "x", values_to = "behav") %>%
+               names_to = "x", values_to = "behav") %>%
+  select(druh, behav, line ) %>%
+  na.omit()
+
+data_behav_24 <- data_24 %>%
+  filter(!is.na(behavior_1)) %>%
+  unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
+  pivot_longer(cols = c("behavior_1", "behavior_2", "behavior_3", "behavior_4", "behavior_5"), 
+               names_to = "x", values_to = "behav") %>%
   select(druh, behav, line ) %>%
   na.omit()
 
 
-############ redundant
-data_sp <- data_all %>%
-  filter(!is.na(behavior_1)) %>%
-  unite(col = "druh", genus, species, sep = "_", remove = TRUE) 
 
 ### substrate, delete empty observations, unite columns into species, pivot to long format
-data_substrate <- data_all %>%
+data_substrate_23 <- data_23 %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   pivot_longer(cols = c("substrate_main_1", "substrate_main_2", "substrate_main_3", 
-  "substrate_main_4", "substrate_main_5"), names_to = "x", values_to = "substrate") %>%
+                        "substrate_main_4", "substrate_main_5"), names_to = "x", values_to = "substrate") %>%
+  select(druh, line, substrate) %>%
+  na.omit(F)
+
+data_substrate_24 <- data_24 %>%
+  filter(!is.na(behavior_1)) %>%
+  unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
+  pivot_longer(cols = c("substrate_main_1", "substrate_main_2", "substrate_main_3", 
+                        "substrate_main_4", "substrate_main_5"), names_to = "x", values_to = "substrate") %>%
   select(druh, line, substrate) %>%
   na.omit(F)
 
@@ -52,8 +65,8 @@ data_substrate_fine <-data_all %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   pivot_longer(cols = c("substrate_fine_1", "substrate_fine_2", "substrate_fine_3", 
-  "substrate_fine_4", "substrate_fine_5"), names_to = "x", 
-  values_to = "substrate_fine", values_drop_na = T) %>%
+                        "substrate_fine_4", "substrate_fine_5"), names_to = "x", 
+               values_to = "substrate_fine", values_drop_na = T) %>%
   select(druh, line, substrate_fine) 
 
 ### literature data
@@ -101,7 +114,7 @@ data_freq_bodovka<- data_bodovka %>%
   summarise(n)%>%
   mutate(prop_bodovka = proportions(n))
 
-data_freq_behav <- data_behav%>%
+data_freq_behav <- data_behav_23%>%
   group_by(druh)%>%
   count()%>%
   summarise(n)%>%
@@ -110,17 +123,17 @@ data_freq_behav <- data_behav%>%
 ## treemap zastoupení druhu bodovka vs pozorovani
 
 treemap_bodovka<-treemap(data_freq_bodovka,
-        index="druh",
-        vSize="n",
-        type="index",
-        title="freq point transect"
+                         index="druh",
+                         vSize="n",
+                         type="index",
+                         title="freq point transect"
 )
 
 treemap_behav<-treemap(data_freq_behav,
-       index="druh",
-       vSize="n",
-       type="index",
-       title="freq obs behav"
+                       index="druh",
+                       vSize="n",
+                       type="index",
+                       title="freq obs behav"
 )
 
 ## frekvenční tabulka
@@ -156,15 +169,6 @@ ggplot(data = data_sp, aes(x = bird_height)) +
 
 tabulka_abundance_behav <- as.data.frame.matrix( table(data_sp$line, data_sp$druh) )
 tabulka_abundance_bodovka <- as.data.frame.matrix(table(data_bodovka_sp$druh, data_bodovka_sp$Datum))
-
-#zbytecne slozity zpusob výpočtu SR pro behav
-species_richness <- data_sp %>%  
-  group_by(line) %>%        
-  summarise(n_distinct(druh)) 
-species_richness
-#n=25 
-
-
 
 
 ### graf linie - foraging method
@@ -226,7 +230,7 @@ transparent_substrate <- ggplot(data_substrate) +
                ground = "#543005",
                leaf = "#003C30",
                other = "#003D88"))
-  
+
 transparent_substrate
 
 
@@ -530,26 +534,26 @@ plot(rotate_tangle)
 
 
 tangle_morfo_behav <- tanglegram(dendro_morfo, dendro, 
-                           common_subtrees_color_lines = TRUE,
-                           highlight_distinct_edges  = FALSE,
-                           sort=T,
-                           highlight_branches_lwd=FALSE,
-                           margin_inner=14,
-                           lwd=2,
-                           main_left="morphology",
-                           main_right="behavior",
-                           hang=F,)
+                                 common_subtrees_color_lines = TRUE,
+                                 highlight_distinct_edges  = FALSE,
+                                 sort=T,
+                                 highlight_branches_lwd=FALSE,
+                                 margin_inner=14,
+                                 lwd=2,
+                                 main_left="morphology",
+                                 main_right="behavior",
+                                 hang=F,)
 
 tangle_morfo_phylo <- tanglegram(dendro_morfo, dendro_phylo_best, 
-                           common_subtrees_color_lines = TRUE,
-                           highlight_distinct_edges  = FALSE,
-                           sort=T,
-                           highlight_branches_lwd=FALSE,
-                           margin_inner=14,
-                           lwd=2,
-                           main_left="morphology",
-                           main_right="phylogeny",
-                           hang=F,)
+                                 common_subtrees_color_lines = TRUE,
+                                 highlight_distinct_edges  = FALSE,
+                                 sort=T,
+                                 highlight_branches_lwd=FALSE,
+                                 margin_inner=14,
+                                 lwd=2,
+                                 main_left="morphology",
+                                 main_right="phylogeny",
+                                 hang=F,)
 
 
 ######################### aesthetics ####################################################################
@@ -589,16 +593,16 @@ legend("topleft",
 ### kombo gildy_phylo estetika
 
 tanglegram(dendro_pretty, dendro_phylo_best, 
-          common_subtrees_color_lines = TRUE,
-          highlight_distinct_edges  = FALSE,
-          sort=T,
-          highlight_branches_lwd=FALSE,
-          margin_inner=14,
-          margin_outer=7,
-          lwd=3,
-          main_left="behavior",
-          main_right="phylogeny",
-          hang=F,)
+           common_subtrees_color_lines = TRUE,
+           highlight_distinct_edges  = FALSE,
+           sort=T,
+           highlight_branches_lwd=FALSE,
+           margin_inner=14,
+           margin_outer=7,
+           lwd=3,
+           main_left="behavior",
+           main_right="phylogeny",
+           hang=F,)
 
 
 legend("topleft", 
