@@ -421,15 +421,15 @@ index_method_23 <- behav_substrate_23 %>% #vypocet indexu B a Ba pro metodu
   group_by(druh,B)%>%
   summarise(Ba=1-(B-1)/(7-1))
 
-index_method_subset <-index_method[!(index_method$druh=="Aegithalos_caudatus"|index_method$druh=="Oriolus_oriolus"| index_method$druh=="Phoenicorus_phoenicorus"| index_method$druh=="Sturnus_vulgaris"| index_method$druh=="Sylvia_borin"| index_method$druh=="Certhia_brachydactyla"| index_method$druh=="Turdus_viscivorus"),]
+index_method_subset_23 <-index_method_23[!(index_method_23$druh=="Aegithalos_caudatus"|index_method_23$druh=="Oriolus_oriolus"| index_method_23$druh=="Phoenicorus_phoenicorus"| index_method_23$druh=="Sturnus_vulgaris"| index_method_23$druh=="Sylvia_borin"| index_method_23$druh=="Certhia_brachydactyla"| index_method_23$druh=="Turdus_viscivorus"),]
 
-index_substrate_subset <-index_substrate[!(index_substrate$druh=="Aegithalos_caudatus"|index_substrate$druh=="Oriolus_oriolus"| index_substrate$druh=="Phoenicorus_phoenicorus"| index_substrate$druh=="Sturnus_vulgaris"| index_substrate$druh=="Sylvia_borin"| index_substrate$druh=="Certhia_brachydactyla"| index_substrate$druh=="Turdus_viscivorus"),]
+index_substrate_subset_23 <-index_substrate_23[!(index_substrate_23$druh=="Aegithalos_caudatus"|index_substrate_23$druh=="Oriolus_oriolus"| index_substrate_23$druh=="Phoenicorus_phoenicorus"| index_substrate_23$druh=="Sturnus_vulgaris"| index_substrate_23$druh=="Sylvia_borin"| index_substrate_23$druh=="Certhia_brachydactyla"| index_substrate_23$druh=="Turdus_viscivorus"),]
 
-index<- bind_cols(index_method, index_substrate) %>%  #do jednoho df
+index_23<- bind_cols(index_method_23, index_substrate_23) %>%  #do jednoho df
   select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
   rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
 
-index_subset<- bind_cols(index_method_subset, index_substrate_subset) %>%  #do jednoho df
+index_subset_23<- bind_cols(index_method_subset_23, index_substrate_subset_23) %>%  #do jednoho df
   select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
   rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
 
@@ -437,16 +437,70 @@ index_subset<- bind_cols(index_method_subset, index_substrate_subset) %>%  #do j
 
 ### Scatterplot specializace metoda/substrat
 par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index, xlab="Specializace na substrat",ylab="Specializace na metodu", pch=19) 
+plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index_23, xlab="Specializace na substrat",ylab="Specializace na metodu", pch=19) 
 abline(lm(BaS ~ BaM, index), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
 par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), ylab="Substrate specialization",xlab="Method specialization", data=index_subset, cex.lab=2, pch=19)
-abline(lm(BaS ~ BaM, index_subset), lw=1.3)
+plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), ylab="Substrate specialization",xlab="Method specialization", data=index_subset_23, cex.lab=2, pch=19)
+abline(lm(BaS ~ BaM, index_subset_23), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
-summary(lm(BaS ~ BaM, index_subset))
+summary(lm(BaS ~ BaM, index_subset_23))
+
+##kod pro vypocet indexu 2024
+
+index_substrate_24 <- behav_substrate_24 %>% #vypocet indexu B a Ba pro substrat
+  group_by(druh) %>% 
+  count(substrate) %>%
+  mutate(prop_substrate = prop.table(n)) %>%
+  mutate(pi2=prop_substrate^2)%>%
+  select(druh, pi2) %>%
+  group_by(druh)%>%
+  summarise(B=1/sum(pi2))%>%
+  select(druh, B)%>%
+  group_by(druh,B)%>%
+  summarise(Ba=1-(B-1)/(6-1))
+
+index_method_24 <- behav_substrate_24 %>% #vypocet indexu B a Ba pro metodu
+  group_by(druh) %>% 
+  count(behav) %>%
+  mutate(prop_behav = prop.table(n)) %>%
+  mutate(pi2=prop_behav^2)%>%
+  select(druh, pi2) %>%
+  group_by(druh)%>%
+  summarise(B=1/sum(pi2))%>%
+  select(druh, B)%>%
+  group_by(druh,B)%>%
+  summarise(Ba=1-(B-1)/(7-1))
+
+index_method_subset_24 <-index_method_24[!(index_method_24$druh=="Aegithalos_caudatus"|index_method_24$druh=="Oriolus_oriolus"| index_method_24$druh=="Phoenicorus_phoenicorus"| index_method_24$druh=="Sturnus_vulgaris"| index_method_24$druh=="Sylvia_borin"| index_method_24$druh=="Certhia_brachydactyla"| index_method_24$druh=="Turdus_viscivorus"),]
+
+index_substrate_subset_24 <-index_substrate_24[!(index_substrate_24$druh=="Aegithalos_caudatus"|index_substrate_24$druh=="Oriolus_oriolus"| index_substrate_24$druh=="Phoenicorus_phoenicorus"| index_substrate_24$druh=="Sturnus_vulgaris"| index_substrate_24$druh=="Sylvia_borin"| index_substrate_24$druh=="Certhia_brachydactyla"| index_substrate_24$druh=="Turdus_viscivorus"),]
+
+index_24<- bind_cols(index_method_24, index_substrate_24) %>%  #do jednoho df
+  select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
+  rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
+
+index_subset_24<- bind_cols(index_method_subset_24, index_substrate_subset_24) %>%  #do jednoho df
+  select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
+  rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
+
+
+
+### Scatterplot specializace metoda/substrat
+par(mar = c(5, 5, 5, 5))
+plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index_24, xlab="Specializace na substrat",ylab="Specializace na metodu", pch=19) 
+abline(lm(BaS ~ BaM, index), lw=1.3)
+abline(c(0,1), lty=2, col="red")
+
+par(mar = c(5, 5, 5, 5))
+plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), ylab="Substrate specialization",xlab="Method specialization", data=index_subset_24, cex.lab=2, pch=19)
+abline(lm(BaS ~ BaM, index_subset_24), lw=1.3)
+abline(c(0,1), lty=2, col="red")
+
+summary(lm(BaS ~ BaM, index_subset_24))
+
 
 
 ################# Disimilarity matrices ###############################
