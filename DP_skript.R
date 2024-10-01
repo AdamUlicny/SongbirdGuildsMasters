@@ -616,14 +616,26 @@ legend("topleft",
 ################### Calculations #######################
 
 #procentualni vyuziti substratu
-data_substrate %>% 
+data_substrate_23 %>% 
+  count(substrate) %>% 
+  mutate(percent = n/sum(n)) %>% 
+  select(-n) %>% 
+  spread(substrate, percent)
+
+data_substrate_24 %>% 
   count(substrate) %>% 
   mutate(percent = n/sum(n)) %>% 
   select(-n) %>% 
   spread(substrate, percent)
 
 #procentualni vyuziti metody
-data_behav %>%
+data_behav_23 %>%
+  count(behav) %>% 
+  mutate(percent = n/sum(n)) %>% 
+  select(-n) %>% 
+  spread(behav, percent)
+
+data_behav_24 %>%
   count(behav) %>% 
   mutate(percent = n/sum(n)) %>% 
   select(-n) %>% 
