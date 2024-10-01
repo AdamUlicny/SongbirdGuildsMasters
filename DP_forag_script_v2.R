@@ -1,7 +1,7 @@
 ################################### Guild structure of a passerine assemblage in a Czech lowland deciduous forest ##############################
 ################## Libraries #################
 
-#packages_to_install <- c("tidyverse", "ape", "vegan", "png","dendextend", "readxl", "patchwork", "treemap", "Rtapas")
+#packages_to_install <- c("tidyverse", "ape", "vegan", "png","dendextend", "readxl", "patchwork", "treemap", "Rtapas","ggrepel")
 #install.packages(packages_to_install)
 library(tidyverse)
 library(readxl)
@@ -13,6 +13,7 @@ library(rstudioapi)
 library(treemap)
 library(ggrepel)
 library(Rtapas)
+library(RColorBrewer)
 
 ################ Importing data ################
 
@@ -61,7 +62,15 @@ data_substrate_24 <- data_24 %>%
   na.omit(F)
 
 ### fine substrate, delete empty observations, unite columns into species, pivot to long format
-data_substrate_fine <-data_all %>%
+data_substrate_fine_23 <-data_23 %>%
+  filter(!is.na(behavior_1)) %>%
+  unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
+  pivot_longer(cols = c("substrate_fine_1", "substrate_fine_2", "substrate_fine_3", 
+                        "substrate_fine_4", "substrate_fine_5"), names_to = "x", 
+               values_to = "substrate_fine", values_drop_na = T) %>%
+  select(druh, line, substrate_fine) 
+
+data_substrate_fine_24 <-data_24 %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   pivot_longer(cols = c("substrate_fine_1", "substrate_fine_2", "substrate_fine_3", 
@@ -114,7 +123,13 @@ data_freq_bodovka<- data_bodovka %>%
   summarise(n)%>%
   mutate(prop_bodovka = proportions(n))
 
-data_freq_behav <- data_behav_23%>%
+data_freq_behav_23 <- data_behav_23%>%
+  group_by(druh)%>%
+  count()%>%
+  summarise(n)%>%
+  mutate(prop_behav=proportions(n))
+
+data_freq_behav_24 <- data_behav_24%>%
   group_by(druh)%>%
   count()%>%
   summarise(n)%>%
@@ -129,16 +144,41 @@ treemap_bodovka<-treemap(data_freq_bodovka,
                          title="freq point transect"
 )
 
-treemap_behav<-treemap(data_freq_behav,
+treemap_behav_23<-treemap(data_freq_behav_23,
                        index="druh",
                        vSize="n",
                        type="index",
-                       title="freq obs behav"
+                       title="freq obs behav 23"
+)
+
+treemap_behav_24<-treemap(data_freq_behav_24,
+                          index="druh",
+                          vSize="n",
+                          type="index",
+                          title="freq obs behav 24"
 )
 
 ## frekvenční tabulka
 
-data_freq_compare<-merge(data_freq_bodovka, data_freq_behav, by="druh", all=TRUE)
+data_freq_compare<-merge(data_freq_bodovka, data_freq_behav_23, by="druh", all=TRUE)
+data_freq_compare_behav<-merge(data_freq_behav_23, data_freq_behav_24, by="druh", all=TRUE)
+
+
+# display graphs
+treemap_bodovka
+treemap_behav_23
+treemap_behav_24
+
+# number of species observed
+data_behav_23 %>%
+  summarize(distinct_species = n_distinct(druh))
+#2023 n=25
+
+
+data_behav_24 %>%
+  summarize(distinct_species = n_distinct(druh))
+#2024 n=23
+
 
 ## proporce druhu na bodovce vs pozorování
 ggplot(data_freq_compare) +
@@ -156,13 +196,29 @@ ggplot(data_freq_compare) +
   xlim(0, 0.2) +
   ylim(0, 0.2) + geom_abline()+ geom_text(label=data_freq_compare$druh)
 
+# rozdíly mezi roky 23 a 24
+ggplot(data_freq_compare_behav) +
+  aes(x = prop_behav.x, y = prop_behav.y) +
+  geom_point(
+    shape = "asterisk",
+    size = 1.45,
+    colour = "#0C350C"
+  ) +
+  labs(
+    x = "Proportion of behavioral observations 2023",
+    y = "Proportion of behavioral observations 2024"
+  ) +
+  theme_bw() +
+  xlim(0, 0.2) +
+  ylim(0, 0.2) + geom_abline()+ geom_text(label=data_freq_compare_behav$druh)
+
 ############ Graphs for behavior and substrate #############
 
 #tabulka s počty foraging actions
-tabulka_behav <- as.data.frame.matrix( table(data_behav$line, data_behav$behav) )
-
+tabulka_behav_23 <- as.data.frame.matrix( table(data_behav_23$line, data_behav_23$behav) )
+tabulka_behav_24 <- as.data.frame.matrix( table(data_behav_24$line, data_behav_24$behav) )
 # histogram výšky pozorování foraging actions
-ggplot(data = data_sp, aes(x = bird_height)) +
+ggplot(data = data_23, aes(x = bird_height)) +
   geom_histogram(binwidth = 1)
 
 # abundancni matice pro linie:
@@ -171,19 +227,50 @@ tabulka_abundance_behav <- as.data.frame.matrix( table(data_sp$line, data_sp$dru
 tabulka_abundance_bodovka <- as.data.frame.matrix(table(data_bodovka_sp$druh, data_bodovka_sp$Datum))
 
 
+## Add color palette based on categories in behav
+num_categories <- length(unique(data_behav_23$behav))
+colors <- brewer.pal(num_categories, "Set1")
+category_colors <- setNames(colors, unique(data_behav_23$behav))
+
 ### graf linie - foraging method
-library(ggplot2)
-sbp1<-ggplot(data_behav, aes(x = line, fill = behav)) + 
+
+method23<-ggplot(data_behav_23, aes(x = line, fill = behav)) + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.title = element_blank(), axis.text.x=element_blank(), legend.background = element_rect(fill='transparent'),
         axis.ticks.x=element_blank())+
   geom_bar(position="fill")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
-  scale_fill_brewer(palette = "Pastel1")+
-  labs(x="", y="", title = "Foraging method")
+  scale_fill_manual(
+    values = c(flycatach = "#0cf0e8",
+               glean = "#06c24b",
+               hang_glean = "#8B7500",
+               hover_snatch = "#9606c2",
+               manipulation = "#0677c2",
+               pounce = "#2F4F4F",
+               probe = "#c2b906",
+               snatch = "#ed8105"))+
+  labs(x="", y="", title = "Foraging method 2023")
+
+method24<-ggplot(data_behav_24, aes(x = line, fill = behav)) + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.title = element_blank(), axis.text.x=element_blank(), legend.background = element_rect(fill='transparent'),
+        axis.ticks.x=element_blank())+
+  geom_bar(position="fill")+
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
+  scale_fill_manual(
+    values = c(flycatach = "#0cf0e8",
+               glean = "#06c24b",
+               hang_glean = "#8B7500",
+               hover_snatch = "#9606c2",
+               manipulation = "#0677c2",
+               pounce = "#2F4F4F",
+               probe = "#c2b906",
+               snatch = "#ed8105"))+
+  labs(x="", y="", title = "Foraging method 2024")
+
+method23+method24
 
 ## graf frekvenci vyuziti substratu
 
-sbp2<-ggplot(data_substrate, aes(x = line, fill = substrate)) + 
+substrate23<-ggplot(data_substrate_23, aes(x = line, fill = substrate)) + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(),axis.text.x=element_blank(),legend.background = element_rect(fill='transparent'), 
         axis.ticks.x=element_blank())+
   geom_bar(position="fill")+
@@ -193,9 +280,21 @@ sbp2<-ggplot(data_substrate, aes(x = line, fill = substrate)) +
                ground = "#8B7500",
                leaf = "#556B2F",
                other = "#2F4F4F"))+
-  labs(x="", y="", title = "Foraging substrate")
+  labs(x="", y="", title = "Foraging substrate 2023")
 
-sbp1 + sbp2
+substrate24<-ggplot(data_substrate_24, aes(x = line, fill = substrate)) + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(),axis.text.x=element_blank(),legend.background = element_rect(fill='transparent'), 
+        axis.ticks.x=element_blank())+
+  geom_bar(position="fill")+
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +scale_fill_manual(
+    values = c(air = "#AEEEEE",
+               bark = "#F5DEB3",
+               ground = "#8B7500",
+               leaf = "#556B2F",
+               other = "#2F4F4F"))+
+  labs(x="", y="", title = "Foraging substrate 2024")
+
+substrate23 + substrate24
 
 ## old colors
 #values = c(air = "#5AB2A8",
@@ -214,7 +313,9 @@ sbp1 + sbp2
 #           probe = "#8B8B00",
 #           snatch =  "#003D88"))
 
-transparent_substrate <- ggplot(data_substrate) +
+
+# transparent edition for poster session
+transparent_substrate <- ggplot(data_substrate_23) +
   aes(x = line, fill = substrate) +
   geom_histogram(bins = 30L) +
   theme(panel.background = element_rect(fill='transparent'), #transparent panel bg
@@ -260,28 +361,43 @@ sbp3 + sbp4 ### plot side by side
 
 ################# Specialisation index ############
 
-behav_substrate <- bind_cols(data_behav,data_substrate)%>%
+behav_substrate_23 <- bind_cols(data_behav_23,data_substrate_23)%>%
   select(line...3, druh...1, behav, substrate)%>%
   rename(line = line...3, druh=druh...1) 
 
-behav_substrate_fine <- bind_cols(data_behav,data_substrate, data_substrate_fine)%>%
-  select(line...3, druh...1, behav, substrate, substrate_fine,)%>%
+behav_substrate_24 <- bind_cols(data_behav_24,data_substrate_24)%>%
+  select(line...3, druh...1, behav, substrate)%>%
   rename(line = line...3, druh=druh...1) 
 
+# fine behav_substrate_fine <- bind_cols(data_behav,data_substrate, data_substrate_fine)%>%
+# fine  select(line...3, druh...1, behav, substrate, substrate_fine,)%>%
+# fine  rename(line = line...3, druh=druh...1) 
+
 #vypocet proporci vyuziti substratu a metody
-prop_substrate<- behav_substrate %>%
+prop_substrate_23<- behav_substrate_23 %>%
   group_by(druh) %>% 
   count(substrate) %>%
   mutate(prop_substrate = prop.table(n))
 
-prop_method <- behav_substrate %>%
+prop_method_23 <- behav_substrate_23 %>%
+  group_by(druh) %>%
+  count(behav) %>%
+  mutate(prop_method = prop.table(n))
+
+
+prop_substrate_24<- behav_substrate_24 %>%
+  group_by(druh) %>% 
+  count(substrate) %>%
+  mutate(prop_substrate = prop.table(n))
+
+prop_method_24 <- behav_substrate_24 %>%
   group_by(druh) %>%
   count(behav) %>%
   mutate(prop_method = prop.table(n))
 
 ##kod pro vypocet indexu
 
-index_substrate <- behav_substrate %>% #vypocet indexu B a Ba pro substrat
+index_substrate_23 <- behav_substrate_23 %>% #vypocet indexu B a Ba pro substrat
   group_by(druh) %>% 
   count(substrate) %>%
   mutate(prop_substrate = prop.table(n)) %>%
@@ -293,7 +409,7 @@ index_substrate <- behav_substrate %>% #vypocet indexu B a Ba pro substrat
   group_by(druh,B)%>%
   summarise(Ba=1-(B-1)/(6-1))
 
-index_method <- behav_substrate %>% #vypocet indexu B a Ba pro metodu
+index_method_23 <- behav_substrate_23 %>% #vypocet indexu B a Ba pro metodu
   group_by(druh) %>% 
   count(behav) %>%
   mutate(prop_behav = prop.table(n)) %>%
