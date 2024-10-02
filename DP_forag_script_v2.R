@@ -227,11 +227,6 @@ tabulka_abundance_behav <- as.data.frame.matrix( table(data_sp$line, data_sp$dru
 tabulka_abundance_bodovka <- as.data.frame.matrix(table(data_bodovka_sp$druh, data_bodovka_sp$Datum))
 
 
-## Add color palette based on categories in behav
-num_categories <- length(unique(data_behav_23$behav))
-colors <- brewer.pal(num_categories, "Set1")
-category_colors <- setNames(colors, unique(data_behav_23$behav))
-
 ### graf linie - foraging method
 
 method23<-ggplot(data_behav_23, aes(x = line, fill = behav)) + 
@@ -296,48 +291,10 @@ substrate24<-ggplot(data_substrate_24, aes(x = line, fill = substrate)) +
 
 substrate23 + substrate24
 
-## old colors
-#values = c(air = "#5AB2A8",
-#           bark = "#CFA154",
-#           ground = "#543005",
-#           leaf = "#008B45",
-#           other = "#003D88"))
-
-##scale_fill_manual(
-#values = c(flycatch = "#5AB2A8",
-#           glean = "#CFA154",
-#           hang_glean = "#FFC17A", 
-#           hover_snatch = "#003C30",
-#           manipulation = "#543005",
-#           pounce = "goldenrod",
-#           probe = "#8B8B00",
-#           snatch =  "#003D88"))
-
-
-# transparent edition for poster session
-transparent_substrate <- ggplot(data_substrate_23) +
-  aes(x = line, fill = substrate) +
-  geom_histogram(bins = 30L) +
-  theme(panel.background = element_rect(fill='transparent'), #transparent panel bg
-        plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
-        panel.grid.major = element_blank(), #remove major gridlines
-        panel.grid.minor = element_blank(), #remove minor gridlines
-        legend.background = element_rect(fill='transparent'), #transparent legend bg
-        legend.box.background = element_rect(fill='transparent'), legend.title = element_blank())+
-  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
-  scale_fill_manual(
-    values = c(air = "#5AB2A8",
-               bark = "#CFA154",
-               ground = "#543005",
-               leaf = "#003C30",
-               other = "#003D88"))
-
-transparent_substrate
-
 
 # preference for foliage density and distance from stem
 ## foliage density 
-sbp3<- data_sp%>% 
+foliage_23<- data_23%>% 
   filter(!is.na(dist_stem))%>%
   drop_na(foliage_dens)%>%
   ggplot(aes(x = line, fill = factor(foliage_dens, levels=c("low", "medium", "high")))) + 
@@ -345,19 +302,44 @@ sbp3<- data_sp%>%
   geom_bar(position="fill", color= "black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_brewer(palette = "Greens")+
-  labs(x="linie", y="", title = "Foliage density")
+  labs(x="linie", y="", title = "Foliage density 2023")
+
+foliage_24<- data_24%>% 
+  filter(!is.na(dist_stem))%>%
+  drop_na(foliage_dens)%>%
+  ggplot(aes(x = line, fill = factor(foliage_dens, levels=c("low", "medium", "high")))) + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank())+
+  geom_bar(position="fill", color= "black")+
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
+  scale_fill_brewer(palette = "Greens")+
+  labs(x="linie", y="", title = "Foliage density 2024")
+
+foliage_23+foliage_24
+
+
+
 
 ## distance from stem
-sbp4<-data_sp%>% 
+distance_23<-data_23%>% 
   drop_na(dist_stem)%>%
   ggplot(aes(x = line, fill = factor(dist_stem, levels=c("edge", "outer", "inner", "stem")))) + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank())+
   geom_bar(position="fill", color= "black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_brewer(palette = "Oranges")+
-  labs(x="linie", y="", title = "Distance from stem")
+  labs(x="linie", y="", title = "Distance from stem_23")
 
-sbp3 + sbp4 ### plot side by side
+distance_24<-data_24%>% 
+  drop_na(dist_stem)%>%
+  ggplot(aes(x = line, fill = factor(dist_stem, levels=c("edge", "outer", "inner", "stem")))) + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank())+
+  geom_bar(position="fill", color= "black")+
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
+  scale_fill_brewer(palette = "Oranges")+
+  labs(x="linie", y="", title = "Distance from stem_24")
+
+distance_23+distance_24
+
 
 ################# Specialisation index ############
 
