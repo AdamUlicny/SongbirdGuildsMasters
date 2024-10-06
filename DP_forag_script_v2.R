@@ -1,7 +1,8 @@
 ################################### Guild structure of a passerine assemblage in a Czech lowland deciduous forest ##############################
 ################## Libraries #################
 
-#packages_to_install <- c("tidyverse", "ape", "vegan", "png","dendextend", "readxl", "patchwork", "treemap", "Rtapas","ggrepel")
+#packages_to_install <- c("tidyverse", "ape", "vegan", "png","dendextend", 
+#"readxl", "patchwork", "treemap", "Rtapas","ggrepel")
 #install.packages(packages_to_install)
 library(tidyverse)
 library(readxl)
@@ -40,6 +41,7 @@ data_behav_24 <- data_24 %>%
   pivot_longer(cols = c("behavior_1", "behavior_2", "behavior_3", "behavior_4", "behavior_5"), 
                names_to = "x", values_to = "behav") %>%
   select(druh, behav, line ) %>%
+  filter(!(druh=="Columba_oenas"| druh=="Columba_palumbus"| druh=="Buteo_buteo"| druh=="Cuculus_canorus"| druh=="Corvus_corax"| druh=="Dryocoptes_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"| druh=="Garrulus_glandarius"))%>%
   na.omit()
 
 
@@ -177,7 +179,7 @@ data_behav_23 %>%
 
 data_behav_24 %>%
   summarize(distinct_species = n_distinct(druh))
-#2024 n=23
+#2024 n=20
 
 
 ## proporce druhu na bodovce vs pozorování
@@ -223,8 +225,8 @@ ggplot(data = data_23, aes(x = bird_height)) +
 
 # abundancni matice pro linie:
 
-tabulka_abundance_behav <- as.data.frame.matrix( table(data_sp$line, data_sp$druh) )
-tabulka_abundance_bodovka <- as.data.frame.matrix(table(data_bodovka_sp$druh, data_bodovka_sp$Datum))
+#tabulka_abundance_behav <- as.data.frame.matrix( table(data_sp$line, data_sp$druh) )
+#tabulka_abundance_bodovka <- as.data.frame.matrix(table(data_bodovka_sp$druh, data_bodovka_sp$Datum))
 
 
 ### graf linie - foraging method
@@ -351,6 +353,8 @@ behav_substrate_24 <- bind_cols(data_behav_24,data_substrate_24)%>%
   select(line...3, druh...1, behav, substrate)%>%
   rename(line = line...3, druh=druh...1) 
 
+behav_substrate_all <- bind_rows(behav_substrate_23, behav_substrate_24)
+
 # fine behav_substrate_fine <- bind_cols(data_behav,data_substrate, data_substrate_fine)%>%
 # fine  select(line...3, druh...1, behav, substrate, substrate_fine,)%>%
 # fine  rename(line = line...3, druh=druh...1) 
@@ -420,7 +424,7 @@ index_subset_23<- bind_cols(index_method_subset_23, index_substrate_subset_23) %
 ### Scatterplot specializace metoda/substrat
 par(mar = c(5, 5, 5, 5))
 plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index_23, xlab="Specializace na substrat",ylab="Specializace na metodu", pch=19) 
-abline(lm(BaS ~ BaM, index), lw=1.3)
+abline(lm(BaS ~ BaM, index_23), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
 par(mar = c(5, 5, 5, 5))
@@ -456,9 +460,9 @@ index_method_24 <- behav_substrate_24 %>% #vypocet indexu B a Ba pro metodu
   group_by(druh,B)%>%
   summarise(Ba=1-(B-1)/(7-1))
 
-index_method_subset_24 <-index_method_24[!(index_method_24$druh=="Aegithalos_caudatus"|index_method_24$druh=="Oriolus_oriolus"| index_method_24$druh=="Phoenicorus_phoenicorus"| index_method_24$druh=="Sturnus_vulgaris"| index_method_24$druh=="Sylvia_borin"| index_method_24$druh=="Certhia_brachydactyla"| index_method_24$druh=="Turdus_viscivorus"),]
+index_method_subset_24 <-index_method_24[!(index_method_24$druh=="Dendrocopos_medius"|index_method_24$druh=="Oriolus_oriolus"| index_method_24$druh=="Dendrocopos_major"| index_method_24$druh=="Sturnus_vulgaris"| index_method_24$druh=="Sylvia_borin"| index_method_24$druh=="Dryocoptes_martius"| index_method_24$druh=="Muscicapa_striata"),]
 
-index_substrate_subset_24 <-index_substrate_24[!(index_substrate_24$druh=="Aegithalos_caudatus"|index_substrate_24$druh=="Oriolus_oriolus"| index_substrate_24$druh=="Phoenicorus_phoenicorus"| index_substrate_24$druh=="Sturnus_vulgaris"| index_substrate_24$druh=="Sylvia_borin"| index_substrate_24$druh=="Certhia_brachydactyla"| index_substrate_24$druh=="Turdus_viscivorus"),]
+index_substrate_subset_24 <-index_substrate_24[!(index_substrate_24$druh=="Dendrocopos_medius"|index_substrate_24$druh=="Oriolus_oriolus"| index_substrate_24$druh=="Dendrocopos_major"| index_substrate_24$druh=="Sturnus_vulgaris"| index_substrate_24$druh=="Sylvia_borin"| index_substrate_24$druh=="Dryocoptes_martius"| index_substrate_24$druh=="Muscicapa_striata"),]
 
 index_24<- bind_cols(index_method_24, index_substrate_24) %>%  #do jednoho df
   select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
@@ -472,12 +476,12 @@ index_subset_24<- bind_cols(index_method_subset_24, index_substrate_subset_24) %
 
 ### Scatterplot specializace metoda/substrat
 par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index_24, xlab="Specializace na substrat",ylab="Specializace na metodu", pch=19) 
-abline(lm(BaS ~ BaM, index), lw=1.3)
+plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index_24, ylab="Specializace na substrat",xlab="Specializace na metodu", pch=19) 
+abline(lm(BaS ~ BaM, index_24), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
 par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), ylab="Substrate specialization",xlab="Method specialization", data=index_subset_24, cex.lab=2, pch=19)
+plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), ylab="Substrate specialization 2024",xlab="Method specialization 2024", data=index_subset_24, cex.lab=2, pch=19)
 abline(lm(BaS ~ BaM, index_subset_24), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
@@ -486,13 +490,47 @@ summary(lm(BaS ~ BaM, index_subset_24))
 
 
 ################# Disimilarity matrices ###############################
-
-dist_mat<-behav_substrate %>%
+dist_mat_23<-behav_substrate_23 %>%
   group_by(druh) %>% 
   count(druh,behav,substrate, sort=TRUE)%>% 
   unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
   pivot_wider(names_from="behav_substrate",values_from="n")%>%
   replace(is.na(.), 0)
+
+dist_mat_24<-behav_substrate_24 %>%
+  group_by(druh) %>% 
+  count(druh,behav,substrate, sort=TRUE)%>% 
+  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
+  pivot_wider(names_from="behav_substrate",values_from="n")%>%
+  replace(is.na(.), 0)
+
+
+dist_mat<-behav_substrate_all %>%
+  filter(n<=5)
+  group_by(druh) %>% 
+  count(druh,behav,substrate, sort=TRUE)%>% 
+  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
+  pivot_wider(names_from="behav_substrate",values_from="n")%>%
+  replace(is.na(.), 0)
+
+
+dist_mat_23<-behav_substrate_23 %>%
+  group_by(druh) %>% 
+  count(druh,behav,substrate, sort=TRUE)%>% 
+  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
+  pivot_wider(names_from="behav_substrate",values_from="n")%>%
+  replace(is.na(.), 0)
+
+
+dist_mat_24<-behav_substrate_24 %>%
+  group_by(druh) %>% 
+  count(druh,behav,substrate, sort=TRUE)%>% 
+  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
+  pivot_wider(names_from="behav_substrate",values_from="n")%>%
+  replace(is.na(.), 0)
+
+
+
 
 dist_mat_fine <-behav_substrate_fine %>%
   group_by(druh) %>% 
@@ -524,13 +562,24 @@ dist_mat_lit_substrate <- data_lit_substrate%>%
 
 
 #odstraneni druhu s n_actions<5 a n_pozorovani<2
-dist_mat_best <- dist_mat[!(dist_mat$druh=="Aegithalos_caudatus"|dist_mat$druh=="Oriolus_oriolus"| dist_mat$druh=="Phoenicorus_phoenicorus"| dist_mat$druh=="Sturnus_vulgaris"| dist_mat$druh=="Sylvia_borin"| dist_mat$druh=="Certhia_brachydactyla"| dist_mat$druh=="Turdus_viscivorus"),] %>%
+
+list_obs_all<-behav_substrate_all %>% count(druh, sort=T)
+
+rm_sp_all <- list_obs_all %>%
+  filter(n<=5)
+
+dist_mat_best <- dist_mat[!(dist_mat$druh=="Certhia_brachydactyla"|dist_mat$druh=="Dryocoptes_martius"| dist_mat$druh=="Phoenicorus_phoenicorus"| dist_mat$druh=="Dendrocopos_major"| dist_mat$druh=="Dendrocopos_medius"| dist_mat$druh=="Turdus_viscivorus"),] %>%
   remove_rownames%>% 
   column_to_rownames(var="druh")
 
 dist_mat_best_fine <- dist_mat_fine[!(dist_mat_fine$druh=="Aegithalos_caudatus"| dist_mat_fine$druh=="Oriolus_oriolus"| dist_mat_fine$druh=="Phoenicorus_phoenicorus"| dist_mat_fine$druh=="Sturnus_vulgaris"| dist_mat_fine$druh=="Sylvia_borin"| dist_mat_fine$druh=="Certhia_brachydactyla"| dist_mat_fine$druh=="Turdus_viscivorus"),] %>%
   remove_rownames%>% 
   column_to_rownames(var="druh")
+
+vzdalenost <- vegdist(dist_mat_best, method = "bray",na.rm=TRUE)#bray-curtis distance
+vzdalenost <- as.matrix(vzdalenost)
+vzdalenost <- as.dist(vzdalenost[order(rownames(vzdalenost)),order(colnames(vzdalenost))])
+
 
 vzdalenost <- vegdist(dist_mat_best, method = "bray",na.rm=TRUE)#bray-curtis distance
 vzdalenost <- as.matrix(vzdalenost)
