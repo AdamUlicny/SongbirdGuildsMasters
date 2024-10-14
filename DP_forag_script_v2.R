@@ -26,7 +26,7 @@ data_lit<-read_excel("./data/literature_data.xlsx")
 
 ############# Data wrangling ##################
 
-### behavior, delete empty observations, unite columns into species, pivot to long format
+### BEHAVIOR 2023, delete empty observations, unite columns into species, pivot to long format
 data_behav_23 <- data_23 %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
@@ -35,18 +35,20 @@ data_behav_23 <- data_23 %>%
   select(druh, behav, line ) %>%
   na.omit()
 
+
+# BEHAVIOR 2024 (here we also remove Piciformes)
 data_behav_24 <- data_24 %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   pivot_longer(cols = c("behavior_1", "behavior_2", "behavior_3", "behavior_4", "behavior_5"), 
                names_to = "x", values_to = "behav") %>%
   select(druh, behav, line ) %>%
-  filter(!(druh=="Columba_oenas"| druh=="Columba_palumbus"| druh=="Buteo_buteo"| druh=="Cuculus_canorus"| druh=="Corvus_corax"| druh=="Dryocoptes_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"| druh=="Garrulus_glandarius"))%>%
+  filter(!(druh=="Dryocoptes_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"))%>%
   na.omit()
 
 
 
-### substrate, delete empty observations, unite columns into species, pivot to long format
+### SUBSTRATE, delete empty observations, unite columns into species, pivot to long format
 data_substrate_23 <- data_23 %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
@@ -61,9 +63,10 @@ data_substrate_24 <- data_24 %>%
   pivot_longer(cols = c("substrate_main_1", "substrate_main_2", "substrate_main_3", 
                         "substrate_main_4", "substrate_main_5"), names_to = "x", values_to = "substrate") %>%
   select(druh, line, substrate) %>%
+  filter(!(druh=="Dryocoptes_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"))%>%
   na.omit(F)
 
-### fine substrate, delete empty observations, unite columns into species, pivot to long format
+### FINE substrate, delete empty observations, unite columns into species, pivot to long format
 data_substrate_fine_23 <-data_23 %>%
   filter(!is.na(behavior_1)) %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
@@ -80,7 +83,7 @@ data_substrate_fine_24 <-data_24 %>%
                values_to = "substrate_fine", values_drop_na = T) %>%
   select(druh, line, substrate_fine) 
 
-### literature data
+### Sample Literature data
 
 data_lit_behav <- data_lit %>%
   select(species_orig,flycatch,glean,hover_snatch,snatch,pounce, probe)%>%
@@ -90,16 +93,17 @@ data_lit_substrate <- data_lit %>%
   select(species_orig, air, bark, flower, ground, leaf, other)%>%
   pivot_longer(cols=c("air","bark","flower","ground","leaf","other"), names_to="substrate",values_to="x")
 
-### point transect, unite columns, remove non-oscines, count observations
+### POINT TRANSECT, unite columns, remove non-oscines, count observations
 data_bodovka_sp <- data_bodovka %>%
   unite(col = "druh", Genus, Species, sep= "_", remove =TRUE) %>%
   group_by(Datum, druh)%>%
   filter(!(druh=="Columba_oenas"| druh=="Columba_palumbus"| druh=="Buteo_buteo"| druh=="Cuculus_canorus"| druh=="Corvus_corax"| druh=="Dryocopus_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"| druh=="Garrulus_glandarius"))%>%
   count()
 
+
 ############### Point transect results #######################
 
-## square plot pro presence/absence z bodovky
+## square plot for presence/absence in point transect
 ggplot(data_bodovka_sp) +
   aes(x = Datum, y = druh, fill = n) +
   geom_tile(linewidth = 1.2) +
@@ -115,7 +119,7 @@ ggplot(data_bodovka_sp, aes(Datum, druh)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
   scale_x_continuous(labels = as.Date(data_bodovka_sp$Datum), breaks = data_bodovka_sp$Datum)
 
-## transformace dat pro porovnani
+## Data transformation for comparison
 
 data_freq_bodovka<- data_bodovka %>%
   unite(col = "druh", Genus, Species, sep= "_", remove =TRUE) %>%
@@ -137,7 +141,7 @@ data_freq_behav_24 <- data_behav_24%>%
   summarise(n)%>%
   mutate(prop_behav=proportions(n))
 
-## treemap zastoupení druhu bodovka vs pozorovani
+## Treemap of Proportion of observations in datasets
 
 treemap_bodovka<-treemap(data_freq_bodovka,
                          index="druh",
@@ -160,16 +164,11 @@ treemap_behav_24<-treemap(data_freq_behav_24,
                           title="freq obs behav 24"
 )
 
-## frekvenční tabulka
+## Proportion Table Comparison
 
 data_freq_compare<-merge(data_freq_bodovka, data_freq_behav_23, by="druh", all=TRUE)
 data_freq_compare_behav<-merge(data_freq_behav_23, data_freq_behav_24, by="druh", all=TRUE)
 
-
-# display graphs
-treemap_bodovka
-treemap_behav_23
-treemap_behav_24
 
 # number of species observed
 data_behav_23 %>%
@@ -359,7 +358,32 @@ behav_substrate_all <- bind_rows(behav_substrate_23, behav_substrate_24)
 # fine  select(line...3, druh...1, behav, substrate, substrate_fine,)%>%
 # fine  rename(line = line...3, druh=druh...1) 
 
-#vypocet proporci vyuziti substratu a metody
+
+################################################## Filtering lists #######
+#currently removing all species with n<=5 observations
+
+removed_species_list_23 <- data_behav_23 %>%
+  group_by(druh)%>%
+  count()%>%
+  summarise(n)%>%
+  filter(n<=5)
+
+removed_species_list_24 <- data_behav_24%>%
+  group_by(druh)%>%
+  count()%>%
+  summarise(n)%>%
+  filter(n<=5)  
+
+removed_species_list_all <-behav_substrate_all%>%
+  group_by(druh)%>%
+  count()%>%
+  summarise(n)%>%
+  filter(n<=5)
+
+# example usage:
+#  filter(!druh %in% removed_species_list_23$druh)
+
+#Proportion of method and substrate use for each year
 prop_substrate_23<- behav_substrate_23 %>%
   group_by(druh) %>% 
   count(substrate) %>%
@@ -369,7 +393,6 @@ prop_method_23 <- behav_substrate_23 %>%
   group_by(druh) %>%
   count(behav) %>%
   mutate(prop_method = prop.table(n))
-
 
 prop_substrate_24<- behav_substrate_24 %>%
   group_by(druh) %>% 
@@ -381,37 +404,41 @@ prop_method_24 <- behav_substrate_24 %>%
   count(behav) %>%
   mutate(prop_method = prop.table(n))
 
-##kod pro vypocet indexu
+############# Standardised Levins specialization index function ##########
+# 𝑩= 𝟏Σ𝒑𝒊𝟐
+# 𝑩a=𝟏−(𝑩−𝟏)/(𝒏−𝟏) (where n=number of available categories to specialize in)
+calculate_index <- function(data, select_column, n_categories = 5) {
+  data %>%
+    group_by(druh) %>%
+    count({{ select_column }}) %>%
+    mutate(prop_substrate = prop.table(n)) %>%
+    mutate(pi2 = prop_substrate^2) %>%
+    select(druh, pi2) %>%
+    group_by(druh) %>%
+    summarise(B = 1 / sum(pi2), .groups = 'drop') %>%
+    select(druh, B) %>%
+    group_by(druh, B) %>%
+    summarise(Ba = 1 - (B - 1) / (n_categories - 1), .groups = 'drop')
+}
 
-index_substrate_23 <- behav_substrate_23 %>% #vypocet indexu B a Ba pro substrat
-  group_by(druh) %>% 
-  count(substrate) %>%
-  mutate(prop_substrate = prop.table(n)) %>%
-  mutate(pi2=prop_substrate^2)%>%
-  select(druh, pi2) %>%
-  group_by(druh)%>%
-  summarise(B=1/sum(pi2))%>%
-  select(druh, B)%>%
-  group_by(druh,B)%>%
-  summarise(Ba=1-(B-1)/(6-1))
 
-index_method_23 <- behav_substrate_23 %>% #vypocet indexu B a Ba pro metodu
-  group_by(druh) %>% 
-  count(behav) %>%
-  mutate(prop_behav = prop.table(n)) %>%
-  mutate(pi2=prop_behav^2)%>%
-  select(druh, pi2) %>%
-  group_by(druh)%>%
-  summarise(B=1/sum(pi2))%>%
-  select(druh, B)%>%
-  group_by(druh,B)%>%
-  summarise(Ba=1-(B-1)/(7-1))
+################### Calculating index for year 2023 #################
+index_substrate_23 <- calculate_index(behav_substrate_23, substrate, n_categories = 5 ) 
+# 5 substrate categories observed during field season
 
-index_method_subset_23 <-index_method_23[!(index_method_23$druh=="Aegithalos_caudatus"|index_method_23$druh=="Oriolus_oriolus"| index_method_23$druh=="Phoenicorus_phoenicorus"| index_method_23$druh=="Sturnus_vulgaris"| index_method_23$druh=="Sylvia_borin"| index_method_23$druh=="Certhia_brachydactyla"| index_method_23$druh=="Turdus_viscivorus"),]
 
-index_substrate_subset_23 <-index_substrate_23[!(index_substrate_23$druh=="Aegithalos_caudatus"|index_substrate_23$druh=="Oriolus_oriolus"| index_substrate_23$druh=="Phoenicorus_phoenicorus"| index_substrate_23$druh=="Sturnus_vulgaris"| index_substrate_23$druh=="Sylvia_borin"| index_substrate_23$druh=="Certhia_brachydactyla"| index_substrate_23$druh=="Turdus_viscivorus"),]
+index_method_23 <- calculate_index(behav_substrate_23, behav, n_categories = 7 ) 
+# 7 behav categories observed during field season
 
-index_23<- bind_cols(index_method_23, index_substrate_23) %>%  #do jednoho df
+# filtering out species with low n of observations
+index_method_subset_23 <- index_method_23 %>% 
+  filter(!druh %in% removed_species_list_23$druh)
+
+index_substrate_subset_23 <-index_substrate_23 %>%
+  filter(!druh %in% removed_species_list_23$druh)
+
+# combining datasets into 1  
+index_23<- bind_cols(index_method_23, index_substrate_23) %>%  
   select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
   rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
 
@@ -421,14 +448,10 @@ index_subset_23<- bind_cols(index_method_subset_23, index_substrate_subset_23) %
 
 
 
-### Scatterplot specializace metoda/substrat
-par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index_23, xlab="Specializace na substrat",ylab="Specializace na metodu", pch=19) 
-abline(lm(BaS ~ BaM, index_23), lw=1.3)
-abline(c(0,1), lty=2, col="red")
+### Scatterplot comparing method/substrate specialization
 
 par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), ylab="Substrate specialization",xlab="Method specialization", data=index_subset_23, cex.lab=2, pch=19)
+plot(BaS ~ BaM, xlim = c(0.3, 1), ylim = c(0.3, 1), ylab="Substrate specialization 2023",xlab="Method specialization 2023", data=index_subset_23, cex.lab=2, pch=19)
 abline(lm(BaS ~ BaM, index_subset_23), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
@@ -436,52 +459,35 @@ summary(lm(BaS ~ BaM, index_subset_23))
 
 ##kod pro vypocet indexu 2024
 
-index_substrate_24 <- behav_substrate_24 %>% #vypocet indexu B a Ba pro substrat
-  group_by(druh) %>% 
-  count(substrate) %>%
-  mutate(prop_substrate = prop.table(n)) %>%
-  mutate(pi2=prop_substrate^2)%>%
-  select(druh, pi2) %>%
-  group_by(druh)%>%
-  summarise(B=1/sum(pi2))%>%
-  select(druh, B)%>%
-  group_by(druh,B)%>%
-  summarise(Ba=1-(B-1)/(6-1))
+################### Calculating index for year 2023 #################
+index_substrate_24 <- calculate_index(behav_substrate_24, substrate, n_categories = 5 ) 
+# 5 substrate categories observed during field season 2024
 
-index_method_24 <- behav_substrate_24 %>% #vypocet indexu B a Ba pro metodu
-  group_by(druh) %>% 
-  count(behav) %>%
-  mutate(prop_behav = prop.table(n)) %>%
-  mutate(pi2=prop_behav^2)%>%
-  select(druh, pi2) %>%
-  group_by(druh)%>%
-  summarise(B=1/sum(pi2))%>%
-  select(druh, B)%>%
-  group_by(druh,B)%>%
-  summarise(Ba=1-(B-1)/(7-1))
 
-index_method_subset_24 <-index_method_24[!(index_method_24$druh=="Dendrocopos_medius"|index_method_24$druh=="Oriolus_oriolus"| index_method_24$druh=="Dendrocopos_major"| index_method_24$druh=="Sturnus_vulgaris"| index_method_24$druh=="Sylvia_borin"| index_method_24$druh=="Dryocoptes_martius"| index_method_24$druh=="Muscicapa_striata"),]
+index_method_24 <- calculate_index(behav_substrate_24, behav, n_categories = 6 ) 
+# 6 behav categories observed during field season 2024
 
-index_substrate_subset_24 <-index_substrate_24[!(index_substrate_24$druh=="Dendrocopos_medius"|index_substrate_24$druh=="Oriolus_oriolus"| index_substrate_24$druh=="Dendrocopos_major"| index_substrate_24$druh=="Sturnus_vulgaris"| index_substrate_24$druh=="Sylvia_borin"| index_substrate_24$druh=="Dryocoptes_martius"| index_substrate_24$druh=="Muscicapa_striata"),]
+# filtering out species with low n of observations
+index_method_subset_24 <- index_method_24 %>% 
+  filter(!druh %in% removed_species_list_24$druh)
 
-index_24<- bind_cols(index_method_24, index_substrate_24) %>%  #do jednoho df
+index_substrate_subset_24 <-index_substrate_24 %>%
+  filter(!druh %in% removed_species_list_24$druh)
+
+# combining datasets into 1 and renaming new columns
+index_24<- bind_cols(index_method_24, index_substrate_24) %>%  
   select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
   rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
 
-index_subset_24<- bind_cols(index_method_subset_24, index_substrate_subset_24) %>%  #do jednoho df
+index_subset_24<- bind_cols(index_method_subset_24, index_substrate_subset_24) %>%
   select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
   rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
 
 
-
-### Scatterplot specializace metoda/substrat
-par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), data=index_24, ylab="Specializace na substrat",xlab="Specializace na metodu", pch=19) 
-abline(lm(BaS ~ BaM, index_24), lw=1.3)
-abline(c(0,1), lty=2, col="red")
+### Scatterplot comparing substrate and method specialization
 
 par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.4, 1), ylim = c(0.4, 1), ylab="Substrate specialization 2024",xlab="Method specialization 2024", data=index_subset_24, cex.lab=2, pch=19)
+plot(BaS ~ BaM, xlim = c(0.3, 1), ylim = c(0.3, 1), ylab="Substrate specialization 2024",xlab="Method specialization 2024", data=index_subset_24, cex.lab=2, pch=19)
 abline(lm(BaS ~ BaM, index_subset_24), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
@@ -490,54 +496,37 @@ summary(lm(BaS ~ BaM, index_subset_24))
 
 
 ################# Disimilarity matrices ###############################
+# combinations of behav-substrate make up columns of this distance matrix
 dist_mat_23<-behav_substrate_23 %>%
+  filter(!druh %in% removed_species_list_23$druh)%>%
   group_by(druh) %>% 
   count(druh,behav,substrate, sort=TRUE)%>% 
-  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
+  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>%
   pivot_wider(names_from="behav_substrate",values_from="n")%>%
-  replace(is.na(.), 0)
+  replace(is.na(.), 0)%>%
+  remove_rownames%>% 
+  column_to_rownames(var="druh")
 
 dist_mat_24<-behav_substrate_24 %>%
+  filter(!druh %in% removed_species_list_24$druh)%>%
   group_by(druh) %>% 
   count(druh,behav,substrate, sort=TRUE)%>% 
-  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
+  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>%
   pivot_wider(names_from="behav_substrate",values_from="n")%>%
-  replace(is.na(.), 0)
+  replace(is.na(.), 0)%>%
+  remove_rownames%>% 
+  column_to_rownames(var="druh")
 
 
 dist_mat<-behav_substrate_all %>%
-  filter(n<=5)
+  filter(!druh %in% removed_species_list_all$druh)%>%
   group_by(druh) %>% 
   count(druh,behav,substrate, sort=TRUE)%>% 
-  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
+  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>%
   pivot_wider(names_from="behav_substrate",values_from="n")%>%
-  replace(is.na(.), 0)
-
-
-dist_mat_23<-behav_substrate_23 %>%
-  group_by(druh) %>% 
-  count(druh,behav,substrate, sort=TRUE)%>% 
-  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
-  pivot_wider(names_from="behav_substrate",values_from="n")%>%
-  replace(is.na(.), 0)
-
-
-dist_mat_24<-behav_substrate_24 %>%
-  group_by(druh) %>% 
-  count(druh,behav,substrate, sort=TRUE)%>% 
-  unite(col = "behav_substrate", behav, substrate, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
-  pivot_wider(names_from="behav_substrate",values_from="n")%>%
-  replace(is.na(.), 0)
-
-
-
-
-dist_mat_fine <-behav_substrate_fine %>%
-  group_by(druh) %>% 
-  count(druh, behav ,substrate, substrate_fine, sort=TRUE)%>% 
-  unite(col = "behav_substrate_fine", behav, substrate, substrate_fine, sep = "-", remove = TRUE) %>% #distancni matice kde behav-substrate kombinace tvori sloupce
-  pivot_wider(names_from="behav_substrate_fine",values_from="n")%>%
-  replace(is.na(.), 0)
+  replace(is.na(.), 0)%>%
+  remove_rownames%>% 
+  column_to_rownames(var="druh")
 
 
 #################### Literature ###############
