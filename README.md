@@ -10,10 +10,10 @@ The code mainly includes:
 - graphs (**ggplot2**)
 
 ## The Data
-There are multiple kinds of datasets included
+There are multiple kinds of datasets included:
 
 **Field data**
-- my own data collected during 2 fieldwork seasons
+- my own data collected during 2 fieldwork seasons (2023&2024)
 
 **Data scraped from literature**
 - data from "foraging" papers with compatible methodology to mine
