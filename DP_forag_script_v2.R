@@ -15,6 +15,7 @@ library(treemap)
 library(ggrepel)
 library(Rtapas)
 library(RColorBrewer)
+library(gridExtra)
 
 ################ Importing data ################
 
@@ -172,13 +173,22 @@ data_freq_compare_behav<-merge(data_freq_behav_23, data_freq_behav_24, by="druh"
 
 # number of species observed
 data_behav_23 %>%
+  filter(!druh %in% removed_species_list_23$druh)%>%
   summarize(distinct_species = n_distinct(druh))
-#2023 n=25
-
+#2023 n=25 unfiltered
+#2023 n=18 filtered
 
 data_behav_24 %>%
+  filter(!druh %in% removed_species_list_24$druh)%>%
   summarize(distinct_species = n_distinct(druh))
-#2024 n=20
+#2024 n=20 unfiltered
+#2024 n=16 filetered
+
+behav_substrate_all%>%
+  filter(!druh %in% removed_species_list_all$druh)%>%
+  summarize(distinct_species = n_distinct(druh))
+#combined n=25 unfiltered
+#combined n=22 filtered
 
 
 ## proporce druhu na bodovce vs pozorování
@@ -342,6 +352,10 @@ distance_24<-data_24%>%
 distance_23+distance_24
 
 
+
+### arrange plots
+grid.arrange(method23, method24, substrate23, substrate24, foliage_23, foliage_24, distance_23, distance_24, ncol=4, nrow =2)
+
 ################# Specialisation index ############
 
 behav_substrate_23 <- bind_cols(data_behav_23,data_substrate_23)%>%
@@ -455,16 +469,28 @@ plot(BaS ~ BaM, xlim = c(0.3, 1), ylim = c(0.3, 1), ylab="Substrate specializati
 abline(lm(BaS ~ BaM, index_subset_23), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
+specialization_23 <- ggplot(index_subset_23, aes(x = BaM, y = BaS)) +
+  geom_point(size = 3) +
+  labs(x = "Method specialization 2023", y = "Substrate specialization 2023") +
+  xlim(0.3, 1) +
+  ylim(0.3, 1) +
+  geom_text(aes(label = druh), vjust = -0.5, hjust = 0.5, size = 3) +  # Add species labels
+  geom_smooth(method = "lm", color = "black", se = F, size = 1.3) +  # Line of best fit
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
+  theme_classic() +
+  theme(
+    axis.title = element_text(size = 16)  # Matches 'cex.lab=2' for axis labels
+  )
+plot(specialization_23)
+
 summary(lm(BaS ~ BaM, index_subset_23))
 
-##kod pro vypocet indexu 2024
-
-################### Calculating index for year 2023 #################
+################### Calculating index for year 2024 #################
 index_substrate_24 <- calculate_index(behav_substrate_24, substrate, n_categories = 5 ) 
 # 5 substrate categories observed during field season 2024
 
 
-index_method_24 <- calculate_index(behav_substrate_24, behav, n_categories = 6 ) 
+index_method_24 <- calculate_index(behav_substrate_24, behav, n_categories = 7 ) 
 # 6 behav categories observed during field season 2024
 
 # filtering out species with low n of observations
@@ -486,13 +512,66 @@ index_subset_24<- bind_cols(index_method_subset_24, index_substrate_subset_24) %
 
 ### Scatterplot comparing substrate and method specialization
 
-par(mar = c(5, 5, 5, 5))
-plot(BaS ~ BaM, xlim = c(0.3, 1), ylim = c(0.3, 1), ylab="Substrate specialization 2024",xlab="Method specialization 2024", data=index_subset_24, cex.lab=2, pch=19)
-abline(lm(BaS ~ BaM, index_subset_24), lw=1.3)
-abline(c(0,1), lty=2, col="red")
+specialization_24 <- ggplot(index_subset_24, aes(x = BaM, y = BaS)) +
+  geom_point(size = 3) +  # This matches 'pch=19' and increases point size slightly
+  labs(x = "Method specialization 2024", y = "Substrate specialization 2024") +
+  xlim(0.3, 1) +
+  ylim(0.3, 1) +
+  geom_text(aes(label = druh), vjust = -0.5, hjust = 0.5, size = 3) +  # Add species labels
+  geom_smooth(method = "lm", color = "black", se = F, size = 1.3) +  # Line of best fit
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
+  theme_classic() +
+  theme(
+    axis.title = element_text(size = 16)  # Matches 'cex.lab=2' for axis labels
+  )
+
+plot(specialization_24)
 
 summary(lm(BaS ~ BaM, index_subset_24))
 
+################### Calculating index for full dataset #################
+index_substrate_all <- calculate_index(behav_substrate_all, substrate, n_categories = 5 ) 
+# 5 substrate categories 
+
+
+index_method_all <- calculate_index(behav_substrate_all, behav, n_categories = 7 ) 
+# 7 behav categories observed 
+
+# filtering out species with low n of observations
+index_method_subset_all <- index_method_all %>% 
+  filter(!druh %in% removed_species_list_all$druh)
+
+index_substrate_subset_all <-index_substrate_all %>%
+  filter(!druh %in% removed_species_list_all$druh)
+
+# combining datasets into 1 and renaming new columns
+index_all<- bind_cols(index_method_all, index_substrate_all) %>%  
+  select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
+  rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
+
+index_subset_all<- bind_cols(index_method_subset_all, index_substrate_subset_all) %>%
+  select(druh...1, B...2, Ba...3, B...5, Ba...6) %>%
+  rename(druh = druh...1, BM=B...2,BaM=Ba...3, BS=B...5, BaS=Ba...6)
+
+
+### Scatterplot comparing substrate and method specialization
+
+specialization_full <- ggplot(index_subset_all, aes(x = BaM, y = BaS)) +
+  geom_point(size = 3) +  # This matches 'pch=19' and increases point size slightly
+  labs(x = "Method specialization", y = "Substrate specialization") +
+  xlim(0.3, 1) +
+  ylim(0.3, 1) +
+  geom_text(aes(label = druh), vjust = -0.5, hjust = 0.5, size = 3) +  # Add species labels
+  geom_smooth(method = "lm", color = "black", se = F, size = 1.3) +  # Line of best fit
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
+  theme_classic() +
+  theme(
+    axis.title = element_text(size = 16)  # Matches 'cex.lab=2' for axis labels
+  )
+
+plot(specialization_full)
+
+summary(lm(BaS ~ BaM, index_subset_24))
 
 
 ################# Disimilarity matrices ###############################
@@ -549,32 +628,12 @@ dist_mat_lit_substrate <- data_lit_substrate%>%
   remove_rownames%>% 
   column_to_rownames(var="species_orig")
 
+###################### Calculating Distance Matrix ###########################x
 
-#odstraneni druhu s n_actions<5 a n_pozorovani<2
-
-list_obs_all<-behav_substrate_all %>% count(druh, sort=T)
-
-rm_sp_all <- list_obs_all %>%
-  filter(n<=5)
-
-dist_mat_best <- dist_mat[!(dist_mat$druh=="Certhia_brachydactyla"|dist_mat$druh=="Dryocoptes_martius"| dist_mat$druh=="Phoenicorus_phoenicorus"| dist_mat$druh=="Dendrocopos_major"| dist_mat$druh=="Dendrocopos_medius"| dist_mat$druh=="Turdus_viscivorus"),] %>%
-  remove_rownames%>% 
-  column_to_rownames(var="druh")
-
-dist_mat_best_fine <- dist_mat_fine[!(dist_mat_fine$druh=="Aegithalos_caudatus"| dist_mat_fine$druh=="Oriolus_oriolus"| dist_mat_fine$druh=="Phoenicorus_phoenicorus"| dist_mat_fine$druh=="Sturnus_vulgaris"| dist_mat_fine$druh=="Sylvia_borin"| dist_mat_fine$druh=="Certhia_brachydactyla"| dist_mat_fine$druh=="Turdus_viscivorus"),] %>%
-  remove_rownames%>% 
-  column_to_rownames(var="druh")
-
-vzdalenost <- vegdist(dist_mat_best, method = "bray",na.rm=TRUE)#bray-curtis distance
-vzdalenost <- as.matrix(vzdalenost)
-vzdalenost <- as.dist(vzdalenost[order(rownames(vzdalenost)),order(colnames(vzdalenost))])
-
-
-vzdalenost <- vegdist(dist_mat_best, method = "bray",na.rm=TRUE)#bray-curtis distance
-vzdalenost <- as.matrix(vzdalenost)
-vzdalenost <- as.dist(vzdalenost[order(rownames(vzdalenost)),order(colnames(vzdalenost))])
-
-vzdalenost_fine <- vegdist(dist_mat_best_fine, method = "bray",na.rm=TRUE)#bray-curtis distance
+# behav-substrate combination distance matrix for 2 season dataset
+distance_all <- vegdist(dist_mat_best, method = "bray",na.rm=TRUE)#bray-curtis distance
+distance_all <- as.matrix(distance_all)
+distance_all <- as.dist(distance_all[order(rownames(distance_all)),order(colnames(distance_all))])
 
 dist_lit_behav <- vegdist(dist_mat_lit_behav, method = "bray",na.rm=TRUE)
 dist_lit_behav <- as.matrix(dist_lit_behav)
@@ -614,18 +673,18 @@ dendro_morfo<-dist_morfo %>%
 
 #### Exporting species names
 
-#druhy<-as.data.frame(unique(data_sp$druh))
-#library("writexl")
-#write_xlsx(druhy,"druhy.xlsx")
+druhy_full<-as.data.frame(unique(index_subset_all$druh))
+library("writexl")
+write_xlsx(druhy_full,"druhy.xlsx")
 
 ### Importing trees
 
-phylo_data <- "./resources/output.nex"
+phylo_data <- "./resources/output_22sp.nex"
 phylo_data<-ape::read.nexus(phylo_data)
 
 ### Selecting best tree
-ape::plot.phylo(phylo_data[[92]])
-phylo_best<-phylo_data[[1]]
+ape::plot.phylo(phylo_data[[28]])
+phylo_best<-phylo_data[[28]]
 
 ### alphabetic sorting
 phylo_best <- dist(cophenetic(phylo_best))
@@ -647,7 +706,7 @@ plot(vzdalenost, phylo_best)
 ################ Dendrograms #####################################
 
 ###### behavior-substrate dendro
-dendro <- vzdalenost %>%
+dendro <- distance_all %>%
   hclust (method="ward.D2") %>%
   as.dendrogram()
 
@@ -668,8 +727,9 @@ dendro_lit_substrate<-dist_lit_substrate %>%
 
 ##### phylogeny dendro
 detach(package:ape, unload=T)
-dendro_phylo_best <- phylo_data[[1]] %>%
-  as.dendrogram()%>%
+dendro_phylo_best <- phylo_data[[22]] %>%
+  as.dendrogram()
+
   dendextend::rotate(c(1:6,7:18))
 
 dendro_phylo_best<-rotate(dendro_phylo_best, c(1:6,7:18))
@@ -680,14 +740,19 @@ plot(dendro,horiz=T, main="dendro behav_substrate", )
 
 plot(as.dendrogram(dendro_fine),horiz=T, main = "dendro behav_substrate_fine")
 
-plot(as.dendrogram(dendro_phylo_best),horiz=T, main = "phylogeny", rotate(as.character(1:7)))
+plot(as.dendrogram(dendro_phylo_best),horiz=T, main = "phylogeny")
 
 par(mar=c(2,1,1,12))
 plot(as.dendrogram(dendro_lit_behav),horiz=T, main = "literature_behav")
 
 plot(as.dendrogram(dendro_lit_substrate),horiz=T, main = "literature_substrate")
 
-
+########################## trying Rtapas ################################
+library(Rtapas)
+tangle_gram(dendro, dendro_phylo_best, np_matrix, NPc, colscale = "sequential", 
+            colgrad = c("darkorchid4", "gold"), nbreaks = 50, node.tag = TRUE, 
+            cexpt = 1.2, link.lwd = 1, link.lty = 1, fsize = 0.75, pts = FALSE,
+            ftype ="i")
 
 ############################## tanglegram ######################################
 
@@ -703,10 +768,11 @@ tanglegram(dendro, dendro_fine,
 
 tangle_phylo <- tanglegram(dendro, dendro_phylo_best, 
                            common_subtrees_color_lines = TRUE,
+                           common_subtrees_color_branches= TRUE,
                            highlight_distinct_edges  = FALSE,
                            sort=T,
                            highlight_branches_lwd=FALSE,
-                           margin_inner=14,
+                           margin_inner=8,
                            lwd=2,
                            main_left="behavior",
                            main_right="phylogeny",
@@ -749,11 +815,11 @@ tangle_morfo_phylo <- tanglegram(dendro_morfo, dendro_phylo_best,
 ######################### aesthetics ####################################################################
 op = par(bg = "white")
 # vector of colors
-labelColors_2 = c("#7A67EE", "#008B45", "#036564","#D46B37" )
-labelLegend = c("probers", "leaf", "air", "ground")
+labelColors_2 = c("#7A67EE", "#008B45", "#036564","#D46B37", "#D43B22")
+labelLegend = c("air?", "probers", "leaf", "bark","ground")
 
 # nařezat dendro do 4 gild
-clusMember = cutree(dendro, 4)
+clusMember = cutree(dendro, 5)
 
 # funkce pro obarvení gild
 colLab <- function(n) {
@@ -781,13 +847,33 @@ legend("topleft",
        inset = c(0, 0.1))
 
 ### kombo gildy_phylo estetika
+dev.off()
+set.seed(12345)
+dendlist(dendro_pretty, dendro_phylo_best)%>%
+  dendextend::untangle(method="random", R=100)%>%
+  dendextend::untangle(method="step2side")%>%
+  tanglegram(common_subtrees_color_lines = TRUE,
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="behavior",
+             main_right="phylogeny",
+             hang=F)
+  
 
-tanglegram(dendro_pretty, dendro_phylo_best, 
+dendlist_rand_search <- untangle_random_search(dendro, dendro_phylo_best)
+entanglement(dendlist_rand_search)
+dendlist_corrected <-  untangle_step_rotate_2side(dendlist_rand_search[[1]], dendlist_rand_search[[2]])
+entanglement(dendlist_corrected)
+
+entanglement(dendlist_corrected)
+tanglegram(dendlist_corrected, 
            common_subtrees_color_lines = TRUE,
            highlight_distinct_edges  = FALSE,
-           sort=T,
            highlight_branches_lwd=FALSE,
-           margin_inner=14,
+           margin_inner=8,
            margin_outer=7,
            lwd=3,
            main_left="behavior",
