@@ -1,8 +1,7 @@
-################################### Guild structure of a passerine assemblage in a Czech lowland deciduous forest ##############################
-################## Libraries #################
-
-#packages_to_install <- c("tidyverse", "ape", "vegan", "png","dendextend", 
-#"readxl", "patchwork", "treemap", "Rtapas","ggrepel")
+################## Guild structure of a passerine assemblage in a Czech lowland deciduous forest ##############################
+################## Libraries ###################################################
+#packages_to_install <- c("tidyverse", "ape", "vegan", dendextend", 
+#"readxl", "patchwork", "treemap", "RColorBrewer","ggrepel", "gridExtra","factoextra")
 #install.packages(packages_to_install)
 library(tidyverse)
 library(readxl)
@@ -13,9 +12,9 @@ library(patchwork)
 library(rstudioapi)
 library(treemap)
 library(ggrepel)
-library(Rtapas)
 library(RColorBrewer)
 library(gridExtra)
+library(factoextra)
 
 ################ Importing data ################
 
@@ -182,7 +181,7 @@ data_behav_24 %>%
   filter(!druh %in% removed_species_list_24$druh)%>%
   summarize(distinct_species = n_distinct(druh))
 #2024 n=20 unfiltered
-#2024 n=16 filetered
+#2024 n=16 filtered
 
 behav_substrate_all%>%
   filter(!druh %in% removed_species_list_all$druh)%>%
@@ -436,7 +435,7 @@ calculate_index <- function(data, select_column, n_categories = 5) {
 }
 
 
-################### Calculating index for year 2023 #################
+################### Calculating index for year 2023 ############################
 index_substrate_23 <- calculate_index(behav_substrate_23, substrate, n_categories = 5 ) 
 # 5 substrate categories observed during field season
 
@@ -485,7 +484,7 @@ plot(specialization_23)
 
 summary(lm(BaS ~ BaM, index_subset_23))
 
-################### Calculating index for year 2024 #################
+################### Calculating index for year 2024 ############################
 index_substrate_24 <- calculate_index(behav_substrate_24, substrate, n_categories = 5 ) 
 # 5 substrate categories observed during field season 2024
 
@@ -529,7 +528,7 @@ plot(specialization_24)
 
 summary(lm(BaS ~ BaM, index_subset_24))
 
-################### Calculating index for full dataset #################
+################### Calculating index for full dataset #########################
 index_substrate_all <- calculate_index(behav_substrate_all, substrate, n_categories = 5 ) 
 # 5 substrate categories 
 
@@ -574,7 +573,7 @@ plot(specialization_full)
 summary(lm(BaS ~ BaM, index_subset_24))
 
 
-################# Disimilarity matrices ###############################
+################# Disimilarity matrices ########################################
 # combinations of behav-substrate make up columns of this distance matrix
 dist_mat_23<-behav_substrate_23 %>%
   filter(!druh %in% removed_species_list_23$druh)%>%
@@ -608,7 +607,7 @@ dist_mat<-behav_substrate_all %>%
   column_to_rownames(var="druh")
 
 
-#################### Literature ###############
+#################### Literature ################################################
 dist_mat_lit_behav <- data_lit_behav%>%
   mutate(across(where(is.numeric), round, 0))%>%
   replace(is.na(.), 0)%>%
@@ -628,10 +627,19 @@ dist_mat_lit_substrate <- data_lit_substrate%>%
   remove_rownames%>% 
   column_to_rownames(var="species_orig")
 
-###################### Calculating Distance Matrix ###########################x
+###################### Calculating Distance Matrix #############################
+# behav-substrate combination distance matrix for 2 season dataset
+distance_all <- vegdist(dist_mat_best, method = "bray",na.rm=TRUE)#bray-curtis distance
+distance_all <- as.matrix(distance_all)
+distance_all <- as.dist(distance_all[order(rownames(distance_all)),order(colnames(distance_all))])
 
 # behav-substrate combination distance matrix for 2 season dataset
 distance_all <- vegdist(dist_mat_best, method = "bray",na.rm=TRUE)#bray-curtis distance
+distance_all <- as.matrix(distance_all)
+distance_all <- as.dist(distance_all[order(rownames(distance_all)),order(colnames(distance_all))])
+
+# behav-substrate combination distance matrix for 2 season dataset
+distance_all <- vegdist(dist_mat, method = "bray",na.rm=TRUE)#bray-curtis distance
 distance_all <- as.matrix(distance_all)
 distance_all <- as.dist(distance_all[order(rownames(distance_all)),order(colnames(distance_all))])
 
@@ -643,7 +651,7 @@ dist_lit_substrate <-vegdist(dist_mat_lit_substrate, method = "bray",na.rm=TRUE)
 dist_lit_substrate <- as.matrix(dist_lit_substrate)
 dist_lit_substrate <- as.dist(dist_lit_substrate[order(rownames(dist_lit_substrate)),order(colnames(dist_lit_substrate))])
 
-#################### Morpho data ###############################
+#################### Morpho data ###############################################
 data_morfo <- read_xlsx("./data/morfo_data.xlsx")
 
 ### drop unused columns
@@ -669,7 +677,7 @@ dendro_morfo<-dist_morfo %>%
   hclust(method="ward.D2")%>%
   as.dendrogram()
 
-#################### Phylogenetic data ############################
+#################### Phylogenetic data #########################################
 
 #### Exporting species names
 
@@ -692,8 +700,8 @@ phylo_best <- as.matrix(phylo_best)
 phylo_best <- as.dist(phylo_best[order(rownames(phylo_best)),order(colnames(phylo_best))])
 
 
-################ Mantel test #####################################
-simple.results.mantel <- mantel(xdis = vzdalenost, ydis = dist_morfo, method = "pearson", permutations = 999)
+################ Mantel test ###################################################
+simple.results.mantel <- mantel(xdis = distance_all, ydis = dist_morfo, method = "pearson", permutations = 999)
 simple.results.mantel
 
 plot(vzdalenost, dist_morfo)
@@ -703,7 +711,7 @@ dist_phylo_mantel
 
 plot(vzdalenost, phylo_best)
 
-################ Dendrograms #####################################
+################ Dendrograms ###################################################
 
 ###### behavior-substrate dendro
 dendro <- distance_all %>%
@@ -747,14 +755,8 @@ plot(as.dendrogram(dendro_lit_behav),horiz=T, main = "literature_behav")
 
 plot(as.dendrogram(dendro_lit_substrate),horiz=T, main = "literature_substrate")
 
-########################## trying Rtapas ################################
-library(Rtapas)
-tangle_gram(dendro, dendro_phylo_best, np_matrix, NPc, colscale = "sequential", 
-            colgrad = c("darkorchid4", "gold"), nbreaks = 50, node.tag = TRUE, 
-            cexpt = 1.2, link.lwd = 1, link.lty = 1, fsize = 0.75, pts = FALSE,
-            ftype ="i")
 
-############################## tanglegram ######################################
+############################## Basic Tanglegram ######################################
 
 tanglegram(dendro, dendro_fine, 
            common_subtrees_color_lines = TRUE, highlight_distinct_edges  = FALSE, highlight_branches_lwd=FALSE,
@@ -812,7 +814,7 @@ tangle_morfo_phylo <- tanglegram(dendro_morfo, dendro_phylo_best,
                                  hang=F,)
 
 
-######################### aesthetics ####################################################################
+######################### Codendrogram Aesthetics ###########################################
 op = par(bg = "white")
 # vector of colors
 labelColors_2 = c("#7A67EE", "#008B45", "#036564","#D46B37", "#D43B22")
@@ -850,9 +852,9 @@ legend("topleft",
 dev.off()
 set.seed(12345)
 dendlist(dendro_pretty, dendro_phylo_best)%>%
-  dendextend::untangle(method="random", R=100)%>%
-  dendextend::untangle(method="step2side")%>%
-  tanglegram(common_subtrees_color_lines = TRUE,
+  dendextend::untangle(method="random", R=1000)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
@@ -861,24 +863,6 @@ dendlist(dendro_pretty, dendro_phylo_best)%>%
              main_left="behavior",
              main_right="phylogeny",
              hang=F)
-  
-
-dendlist_rand_search <- untangle_random_search(dendro, dendro_phylo_best)
-entanglement(dendlist_rand_search)
-dendlist_corrected <-  untangle_step_rotate_2side(dendlist_rand_search[[1]], dendlist_rand_search[[2]])
-entanglement(dendlist_corrected)
-
-entanglement(dendlist_corrected)
-tanglegram(dendlist_corrected, 
-           common_subtrees_color_lines = TRUE,
-           highlight_distinct_edges  = FALSE,
-           highlight_branches_lwd=FALSE,
-           margin_inner=8,
-           margin_outer=7,
-           lwd=3,
-           main_left="behavior",
-           main_right="phylogeny",
-           hang=F,)
 
 
 legend("topleft", 
@@ -890,10 +874,27 @@ legend("topleft",
 
 
 
+############################## FactoExtra visualizations #######################
+
+fviz_dend(dendro, cex = 0.8, lwd = 0.8, k = 6,
+                  rect = TRUE,
+                  k_colors = "jco",
+                  rect_border = "jco",
+                  rect_fill = TRUE,
+                  type = "phylogenic",
+                  repel=T)
 
 
-######################################################################################################################
-################### Calculations #######################
+
+fviz_dend(dendro, cex = 0.8, lwd = 0.8, k = 6, 
+          rect = TRUE, 
+          k_colors = "jco", 
+          rect_border = "jco", 
+          rect_fill = TRUE,
+          ggtheme = theme_gray())
+
+
+################### Calculations ###############################################
 
 #procentualni vyuziti substratu
 data_substrate %>% 
