@@ -1,0 +1,101 @@
+---
+title: "Field Results"
+author: "Adam Ulicny"
+date: "2024-11-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Results:
+### Number of observed individuals
+2023: 440
+2024: 321
+**SUM: 761**
+### Number of foraging actions
+2023 : 1717
+2024: 1135
+**SUM: 2852**
+### Species observed:
+### 2023
+25 species total
+**18** sufficiently sampled (n individuals > 2)
+### 2024
+20 species total
+**15** sufficiently sampled (n individuals > 2)
+### Combined dataset 2023+2024
+25 species total
+**20** sufficiently sampled! (n individuals >2)
+
+# Differences between years
+```{r Foraging between years, echo=FALSE}
+library(gridExtra)
+grid.arrange(method23, method24, substrate23, substrate24, foliage_23, foliage_24, distance_23, distance_24, ncol=4, nrow =2)
+```
+
+## Changes in specialization?
+```{r Specialization between years, echo=FALSE}
+plot(specialization_23)
+plot(specialization_24)
+```
+### Note:
+In the Index standardization formula, we use the number of categories (either substrate or method)
+$𝑩_𝑨 = 𝟏 − (𝑩 − 𝟏)/(𝒏 − 𝟏)$
+Should we base the n-categories on the theoretical categories or categories observed?
+
+## Specialization for full dataset
+```{r Specialization full dataset, echo=FALSE}
+plot(specialization_full)
+```
+# Guilds (~2800 foraging actions total)
+```{r Guilds with aesthetics, echo=FALSE}
+par(mar=c(5,1,1,12))
+plot(dendro_pretty, main = "Foraging guilds", type = "rectangle", horiz = T)
+legend("topleft", 
+       legend = labelLegend, 
+       col = labelColors_2, 
+       pch = c(20,20,20,20), bty = "y",  pt.cex = 1.5, cex = 0.8 , 
+       text.col = "black", horiz = FALSE,
+       title="Guilds",
+       inset = c(0, 0.1))
+```
+
+```{r Guilds displayed in a different style, echo=FALSE}
+library(factoextra)
+fviz_dend(dendro, cex = 0.8, lwd = 0.8, k = 6,
+                  rect = TRUE,
+                  k_colors = "jco",
+                  rect_border = "jco",
+                  rect_fill = TRUE,
+                  type = "phylogenic",
+                  repel=T)
+```
+
+```{r Guild - Phylo tanglegram, echo=FALSE}
+library(dendextend)
+set.seed(12345)
+dendlist(dendro_pretty, dendro_phylo_best)%>%
+  dendextend::untangle(method="random", R=1000)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="behavior",
+             main_right="phylogeny",
+             hang=F)
+
+
+legend("topleft", 
+       legend = labelLegend, 
+       col = labelColors_2, 
+       pch = c(20,20,20,20), bty = "n",  pt.cex = 1.5, cex = 0.8 , 
+       text.col = "black", horiz = FALSE, inset = c(0, 0.1))
+
+```
+
+

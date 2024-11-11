@@ -35,7 +35,13 @@ data_behav_23 <- data_23 %>%
   select(druh, behav, line ) %>%
   na.omit()
 
-
+n_individuals_23 <- data_23 %>%
+  filter(!is.na(behavior_1)) %>%
+  unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
+  group_by(druh)%>%
+  count()%>%
+  summarise(n)
+  
 # BEHAVIOR 2024 (here we also remove Piciformes)
 data_behav_24 <- data_24 %>%
   filter(!is.na(behavior_1)) %>%
@@ -46,7 +52,12 @@ data_behav_24 <- data_24 %>%
   filter(!(druh=="Dryocoptes_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"))%>%
   na.omit()
 
-
+n_individuals_24 <- data_24 %>%
+  filter(!is.na(behavior_1)) %>%
+  unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
+  group_by(druh)%>%
+  count()%>%
+  summarise(n)
 
 ### SUBSTRATE, delete empty observations, unite columns into species, pivot to long format
 data_substrate_23 <- data_23 %>%
@@ -375,23 +386,27 @@ behav_substrate_all <- bind_rows(behav_substrate_23, behav_substrate_24)
 ################################################## Filtering lists #######
 #currently removing all species with n<=5 observations
 
-removed_species_list_23 <- data_behav_23 %>%
+removed_species_list_23 <- data_23 %>%
+  filter(!is.na(behavior_1)) %>%
+  unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   group_by(druh)%>%
   count()%>%
   summarise(n)%>%
-  filter(n<=5)
+  filter(n<3)
 
-removed_species_list_24 <- data_behav_24%>%
+removed_species_list_24 <- data_24%>%
+  filter(!is.na(behavior_1)) %>%
+  unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   group_by(druh)%>%
   count()%>%
   summarise(n)%>%
-  filter(n<=5)  
+  filter(n<3)  
 
-removed_species_list_all <-behav_substrate_all%>%
+removed_species_list_all <- full_join(n_individuals_23, n_individuals_24, by="druh")%>%
+  replace(is.na(.), 0)%>%
+  mutate(n=n.x+n.y)%>%
   group_by(druh)%>%
-  count()%>%
-  summarise(n)%>%
-  filter(n<=5)
+  filter(n<3)
 
 # example usage:
 #  filter(!druh %in% removed_species_list_23$druh)
@@ -560,7 +575,7 @@ specialization_full <- ggplot(index_subset_all, aes(x = BaM, y = BaS)) +
   labs(x = "Method specialization", y = "Substrate specialization") +
   xlim(0.3, 1) +
   ylim(0.3, 1) +
-  geom_text(aes(label = druh), vjust = -0.5, hjust = 0.5, size = 3) +  # Add species labels
+  geom_text(aes(label = druh), vjust = -0.5, hjust = 0.5, size = 3, position=position_jitter()) +  # Add species labels
   geom_smooth(method = "lm", color = "black", se = F, size = 1.3) +  # Line of best fit
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
   theme_classic() +
@@ -687,7 +702,7 @@ write_xlsx(druhy_full,"druhy.xlsx")
 
 ### Importing trees
 
-phylo_data <- "./resources/output_22sp.nex"
+phylo_data <- "./resources/output_20sp.nex"
 phylo_data<-ape::read.nexus(phylo_data)
 
 ### Selecting best tree
