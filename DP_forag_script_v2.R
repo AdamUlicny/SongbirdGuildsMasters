@@ -40,7 +40,8 @@ n_individuals_23 <- data_23 %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   group_by(druh)%>%
   count()%>%
-  summarise(n)
+  summarise(n)%>%
+  arrange(desc(n))
   
 # BEHAVIOR 2024 (here we also remove Piciformes)
 data_behav_24 <- data_24 %>%
@@ -57,7 +58,8 @@ n_individuals_24 <- data_24 %>%
   unite(col = "druh", genus, species, sep = "_", remove = TRUE) %>%
   group_by(druh)%>%
   count()%>%
-  summarise(n)
+  summarise(n)%>%
+  arrange(desc(n))
 
 ### SUBSTRATE, delete empty observations, unite columns into species, pivot to long format
 data_substrate_23 <- data_23 %>%
@@ -181,6 +183,7 @@ data_freq_compare<-merge(data_freq_bodovka, data_freq_behav_23, by="druh", all=T
 data_freq_compare_behav<-merge(data_freq_behav_23, data_freq_behav_24, by="druh", all=TRUE)
 
 
+
 # number of species observed
 data_behav_23 %>%
   filter(!druh %in% removed_species_list_23$druh)%>%
@@ -232,6 +235,7 @@ ggplot(data_freq_compare_behav) +
   theme_bw() +
   xlim(0, 0.2) +
   ylim(0, 0.2) + geom_abline()+ geom_text(label=data_freq_compare_behav$druh)
+
 
 ############ Graphs for behavior and substrate #############
 
@@ -400,6 +404,7 @@ removed_species_list_24 <- data_24%>%
   group_by(druh)%>%
   count()%>%
   summarise(n)%>%
+  filter(!(druh=="Dryocoptes_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"))%>%
   filter(n<3)  
 
 removed_species_list_all <- full_join(n_individuals_23, n_individuals_24, by="druh")%>%
@@ -408,8 +413,46 @@ removed_species_list_all <- full_join(n_individuals_23, n_individuals_24, by="dr
   group_by(druh)%>%
   filter(n<3)
 
+n_actions_full <- behav_substrate_all%>%
+  group_by(druh)%>%
+  count()%>%
+  summarise(n)
+
+n_individuals_full<- full_join(n_individuals_23, n_individuals_24, by="druh")%>%
+  replace(is.na(.), 0)%>%
+  mutate(n=n.x+n.y)%>%
+  group_by(druh)%>%
+  arrange(desc(n))%>%
+  filter(!(druh=="Dryocoptes_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"))
+
 # example usage:
 #  filter(!druh %in% removed_species_list_23$druh)
+
+
+#################### Histograms (species, observations, foraging actions)#######
+ggplot(n_individuals_full, aes(x = reorder(druh, n), y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Species", y = "Number of Individuals") +
+  ggtitle("Number of Individuals per Species") +
+  coord_cartesian(ylim = c(0, 10)) +
+  scale_y_continuous(breaks = seq(0,10, by=1))+
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate species names for readability
+  )
+
+ggplot(n_actions_full, aes(x = reorder(druh, n), y = n)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Species", y = "Number of Foraging Actions") +
+  ggtitle("Number of Foraging Actions per Species") +
+  coord_cartesian(ylim = c(0, 50)) +
+  scale_y_continuous(breaks = seq(0,50, by=5))+
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate species names for readability
+  )
+
+
 
 #Proportion of method and substrate use for each year
 prop_substrate_23<- behav_substrate_23 %>%
@@ -585,9 +628,9 @@ specialization_full <- ggplot(index_subset_all, aes(x = BaM, y = BaS)) +
 
 plot(specialization_full)
 
-summary(lm(BaS ~ BaM, index_subset_24))
+summary(lm(BaS ~ BaM, index_subset_all))
 
-
+grid.arrange(specialization_23, specialization_24, ncol=2, nrow=1)
 ################# Disimilarity matrices ########################################
 # combinations of behav-substrate make up columns of this distance matrix
 dist_mat_23<-behav_substrate_23 %>%
