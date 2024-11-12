@@ -411,7 +411,7 @@ removed_species_list_all <- full_join(n_individuals_23, n_individuals_24, by="dr
   replace(is.na(.), 0)%>%
   mutate(n=n.x+n.y)%>%
   group_by(druh)%>%
-  filter(n<3)
+  filter(n<5)
 
 n_actions_full <- behav_substrate_all%>%
   group_by(druh)%>%
@@ -750,6 +750,13 @@ phylo_data<-ape::read.nexus(phylo_data)
 
 ### Selecting best tree
 ape::plot.phylo(phylo_data[[28]])
+phylo_data<-phylo_data[[28]]
+### Remove species from tree)
+### species to remove list (remove_species_list_all)
+### keeps all other species 
+pruned.tree<-drop.tip(phylo_data, remove_species_list_all)
+ape::plot.phylo(pruned.tree)
+?extract.clade
 phylo_best<-phylo_data[[28]]
 
 ### alphabetic sorting
