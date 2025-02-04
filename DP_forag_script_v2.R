@@ -24,6 +24,8 @@ data_24 <- read_excel("./data/behav_data_24.xlsx")
 data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
 data_lit<-read_excel("./data/literature_data.xlsx")
 
+
+
 ############# Data wrangling ##################
 
 ### BEHAVIOR 2023, delete empty observations, unite columns into species, pivot to long format
@@ -112,6 +114,7 @@ data_bodovka_sp <- data_bodovka %>%
   group_by(Datum, druh)%>%
   filter(!(druh=="Columba_oenas"| druh=="Columba_palumbus"| druh=="Buteo_buteo"| druh=="Cuculus_canorus"| druh=="Corvus_corax"| druh=="Dryocopus_martius"| druh=="Dendrocopos_medius"| druh=="Dendrocopos_major"| druh=="Garrulus_glandarius"))%>%
   count()
+
 
 
 ############### Point transect results #######################
@@ -342,8 +345,6 @@ foliage_24<- data_24%>%
 foliage_23+foliage_24
 
 
-
-
 ## distance from stem
 distance_23<-data_23%>% 
   drop_na(dist_stem)%>%
@@ -386,6 +387,7 @@ behav_substrate_all <- bind_rows(behav_substrate_23, behav_substrate_24)
 # fine  select(line...3, druh...1, behav, substrate, substrate_fine,)%>%
 # fine  rename(line = line...3, druh=druh...1) 
 
+###### sp_filter_lists
 
 ################################################## Filtering lists #######
 #currently removing all species with n<=5 observations
