@@ -1,0 +1,50 @@
+job_id: tree-pruner-0199fb38-65e9-4b8e-bde6-ae2eed9ffac3
+email: adamulicny98@gmail.com
+tree_base: birdtree
+tree_set: EricsonStage2Full
+sample_size: 100
+names: [Aegithalos_caudatus, Certhia_brachydactyla, Certhia_familiaris, Carduelis_chloris,
+  Coccothraustes_coccothraustes, Parus_caeruleus, Dendrocopos_major, Dendrocopos_medius,
+  Dryocopus_martius, Erithacus_rubecula, Ficedula_albicollis, Ficedula_hypoleuca,
+  Fringilla_coelebs, Muscicapa_striata, Oriolus_oriolus, Parus_major, Phoenicurus_phoenicurus,
+  Phylloscopus_collybita, Phylloscopus_sibilatrix, Parus_palustris, Sitta_europaea,
+  Sturnus_vulgaris, Sylvia_atricapilla, Sylvia_borin, Troglodytes_troglodytes, Turdus_merula,
+  Turdus_philomelos, Turdus_viscivorus]
+sample_trees: [EricsonStage2Full_6465.tre, EricsonStage2Full_0072.tre, EricsonStage2Full_6476.tre,
+  EricsonStage2Full_4079.tre, EricsonStage2Full_8767.tre, EricsonStage2Full_7642.tre,
+  EricsonStage2Full_3526.tre, EricsonStage2Full_9558.tre, EricsonStage2Full_8431.tre,
+  EricsonStage2Full_9120.tre, EricsonStage2Full_8920.tre, EricsonStage2Full_7809.tre,
+  EricsonStage2Full_2005.tre, EricsonStage2Full_3749.tre, EricsonStage2Full_7765.tre,
+  EricsonStage2Full_0404.tre, EricsonStage2Full_8644.tre, EricsonStage2Full_3139.tre,
+  EricsonStage2Full_3770.tre, EricsonStage2Full_9365.tre, EricsonStage2Full_4922.tre,
+  EricsonStage2Full_1712.tre, EricsonStage2Full_9680.tre, EricsonStage2Full_9975.tre,
+  EricsonStage2Full_7407.tre, EricsonStage2Full_4243.tre, EricsonStage2Full_1080.tre,
+  EricsonStage2Full_6120.tre, EricsonStage2Full_1086.tre, EricsonStage2Full_5417.tre,
+  EricsonStage2Full_0566.tre, EricsonStage2Full_2849.tre, EricsonStage2Full_2689.tre,
+  EricsonStage2Full_2719.tre, EricsonStage2Full_5936.tre, EricsonStage2Full_2011.tre,
+  EricsonStage2Full_1755.tre, EricsonStage2Full_8948.tre, EricsonStage2Full_9281.tre,
+  EricsonStage2Full_9326.tre, EricsonStage2Full_9877.tre, EricsonStage2Full_9423.tre,
+  EricsonStage2Full_9715.tre, EricsonStage2Full_0645.tre, EricsonStage2Full_2987.tre,
+  EricsonStage2Full_6533.tre, EricsonStage2Full_1458.tre, EricsonStage2Full_4456.tre,
+  EricsonStage2Full_1824.tre, EricsonStage2Full_1778.tre, EricsonStage2Full_9371.tre,
+  EricsonStage2Full_5298.tre, EricsonStage2Full_9024.tre, EricsonStage2Full_1896.tre,
+  EricsonStage2Full_9478.tre, EricsonStage2Full_7987.tre, EricsonStage2Full_6205.tre,
+  EricsonStage2Full_4912.tre, EricsonStage2Full_0999.tre, EricsonStage2Full_9409.tre,
+  EricsonStage2Full_5607.tre, EricsonStage2Full_7045.tre, EricsonStage2Full_6590.tre,
+  EricsonStage2Full_1097.tre, EricsonStage2Full_6524.tre, EricsonStage2Full_0011.tre,
+  EricsonStage2Full_0220.tre, EricsonStage2Full_5060.tre, EricsonStage2Full_7689.tre,
+  EricsonStage2Full_2986.tre, EricsonStage2Full_6606.tre, EricsonStage2Full_3765.tre,
+  EricsonStage2Full_3532.tre, EricsonStage2Full_3865.tre, EricsonStage2Full_9739.tre,
+  EricsonStage2Full_5552.tre, EricsonStage2Full_2140.tre, EricsonStage2Full_8687.tre,
+  EricsonStage2Full_7856.tre, EricsonStage2Full_8697.tre, EricsonStage2Full_4404.tre,
+  EricsonStage2Full_2838.tre, EricsonStage2Full_1749.tre, EricsonStage2Full_4452.tre,
+  EricsonStage2Full_7339.tre, EricsonStage2Full_5543.tre, EricsonStage2Full_1641.tre,
+  EricsonStage2Full_1423.tre, EricsonStage2Full_8077.tre, EricsonStage2Full_4568.tre,
+  EricsonStage2Full_1519.tre, EricsonStage2Full_0782.tre, EricsonStage2Full_3488.tre,
+  EricsonStage2Full_7394.tre, EricsonStage2Full_7251.tre, EricsonStage2Full_9935.tre,
+  EricsonStage2Full_5452.tre, EricsonStage2Full_3582.tre, EricsonStage2Full_8491.tre,
+  EricsonStage2Full_2023.tre]
+status: CREATED
+created_at: "2025-02-09T12:37:10Z"
+completed_at: ""
+bad_names: {}

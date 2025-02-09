@@ -17,7 +17,10 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 data_23 <- read_excel("./data/behav_data_23.xlsx")
 data_24 <- read_excel("./data/behav_data_24.xlsx")
 data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
-
+phylo_cz <- "./resources/phylo/phylo_cz_v1/output.nex"
+phylo_cz <- ape::read.nexus(phylo_cz)
+phylo_meta <- "./resources/phylo/phylo_meta_v1/output.nex"
+phylo_meta <- ape::read.nexus(phylo_meta)
 ################################### Data preparation#####################
 # in data bodovka unite columns genus and species, separator _, name sp_orig
 data_bodovka <- data_bodovka %>%
@@ -125,8 +128,7 @@ missed_species <- data_bodovka %>%
   distinct()
 
 # sp_orig in data_cz_long to csv
-write.csv(data_cz_long$sp_orig, file = "./resources/sp_orig.csv")
-
+write.csv(counts_sp$sp_orig, file = "./resources/sp_orig.csv")
 
 
 ######################### Basic Graphs #####################################
@@ -250,5 +252,7 @@ bray_dis_matrix <- as.dist(bray_dis_matrix[order(rownames(bray_dis_matrix)),orde
 jaccard_dis_matrix <- vegdist(data_cz_wide, method = "jaccard")
 jaccard_dis_matrix <- as.matrix(jaccard_dis_matrix)
 jaccard_dis_matrix <- as.dist(jaccard_dis_matrix[order(rownames(jaccard_dis_matrix)),order(colnames(jaccard_dis_matrix))])
+
+# 
 
 
