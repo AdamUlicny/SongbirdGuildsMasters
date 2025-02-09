@@ -83,10 +83,8 @@ counts_sp <- counts_sp%>%
 # create filtering list for easy species removal actions  and individuals > 2
 filter_list <- counts_sp %>%
   filter(actions < 10 | individuals < 3) %>%
-  pull(sp_orig)
-
-# add to filter non-passerine birds (dendrocopos and dryocopus)
-filter_list <- c(filter_list, "Dendrocopos_major", "Dendrocopos_minor", "Dryocopus_martius")
+  pull(sp_orig)%>%
+  c("Dendrocopos_major", "Dendrocopos_minor", "Dryocopus_martius")
 
 # Filter out species from filter_list and provide final list of passerines (n=19)
 data_cz_long <- data_cz_long %>%
@@ -253,6 +251,95 @@ jaccard_dis_matrix <- vegdist(data_cz_wide, method = "jaccard")
 jaccard_dis_matrix <- as.matrix(jaccard_dis_matrix)
 jaccard_dis_matrix <- as.dist(jaccard_dis_matrix[order(rownames(jaccard_dis_matrix)),order(colnames(jaccard_dis_matrix))])
 
-# 
+# prepare phylogenetic distances
+phylo_cz <- phylo_cz[[10]]
+phylo_cz <- ape::drop.tip(phylo_cz, filter_list)
+phylo_cz <- cophenetic(phylo_cz)
+phylo_cz <- as.matrix(phylo_cz)
+phylo_cz <- as.dist(phylo_cz[order(rownames(phylo_cz)),order(colnames(phylo_cz))])
+
+
+
+# Prepare dendrograms
+dendro_bray <- bray_dis_matrix %>% 
+  hclust(method = "ward.D2") %>%
+  as.dendrogram
+
+dendro_jaccard <- jaccard_dis_matrix %>%
+  hclust(method = "ward.D2") %>%
+  as.dendrogram
+
+dendro_phylo <- hclust(phylo_cz) %>%
+  as.dendrogram
+
+############# Plotting dendrograms ###############
+# Bray dissimilarity dendrogram
+plot(dendro_bray,horiz=T, main="Dendrogram Bray-Curtis dissimilarity", )
+plot(dendro_jaccard,horiz=T, main="Dendrogram Jaccard distance", )
+plot(dendro_phylo,horiz=T, main="Phylogeny", )
+
+######### Colored guilds ##############
+
+# cut dendrogram into 5 guilds
+clusMember = cutree(dendro_bray, 5)
+
+# vector of colors
+labelColors = c("#D46B37", "#020C45","#036564","#7A67EE", "#D43B22")
+labelLegend = c("bark", "probe", "leaf", "air", "ground")
+
+# guild color function
+colLab <- function(n) {
+  if (is.leaf(n)) {
+    a <- attributes(n)
+    labCol <- labelColors[clusMember[which(names(clusMember) == a$label)]]
+    attr(n, "nodePar") <- c(a$nodePar, lab.col = labCol)
+  }
+  n
+}
+
+# dendrapply function to guilds
+dendro_bray_aes = dendrapply(dendro_bray, colLab)
+
+### plot guilds, colors and legend
+par(mar=c(5,1,1,12))
+plot(dendro_bray_aes, main = "Foraging guilds", type = "rectangle", horiz = T)
+legend("topleft", 
+       legend = labelLegend, 
+       col = labelColors, 
+       pch = c(20,20,20,20), bty = "y",  pt.cex = 1.5, cex = 0.8 , 
+       text.col = "black", horiz = FALSE,
+       title="Guilds",
+       inset = c(0, 0.1))
+
+#################### Tanglegram ############################
+
+set.seed(12345)
+dendlist(dendro_bray, dendro_phylo)%>%
+  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="behavior",
+             main_right="phylogeny",
+             hang=F)
+
+# Using Jaccard
+
+dendlist(dendro_bray, dendro_jaccard)%>%
+  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="Bray-Curtis",
+             main_right="Jaccard",
+             hang=F)
 
 
