@@ -26,7 +26,7 @@ phylo_meta <- ape::read.nexus(phylo_meta)
 data_bodovka <- data_bodovka %>%
   unite(col = "sp_orig", Genus, Species, sep = "_", remove = TRUE)
 
-# In data_23 replace line column with year 2023, then combine ID with year, separate with _
+# In data_23 replace line column with year 2023, then combine ID with year, separate 
 data_23 <- data_23 %>%
   mutate(line = 2023) %>%
   unite(col = "ID", ID, line, sep = "_", remove = TRUE)
@@ -341,5 +341,4 @@ dendlist(dendro_bray, dendro_jaccard)%>%
              main_left="Bray-Curtis",
              main_right="Jaccard",
              hang=F)
-
 
