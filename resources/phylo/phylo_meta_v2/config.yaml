@@ -1,0 +1,112 @@
+job_id: tree-pruner-bf739346-de4a-4827-ba4a-b07d95d97b59
+email: adamulicny98@gmail.com
+tree_base: birdtree
+tree_set: EricsonStage2Full
+sample_size: 100
+names: [Abroscopus superciliaris, Acanthagenys rufogularis, Acanthiza apicalis, Acanthiza
+    chrysorrhoa, Acanthiza ewingii, Acanthiza inornata, Acanthiza lineata, Acanthiza
+    nana, Acanthiza pusilla, Acanthiza reguloides, Acanthiza robustirostris, Acanthiza
+    uropygialis, Acanthorhynchus superciliosus, Acanthorhynchus tenuirostris, Acridotheres
+    fuscus, Acrocephalus dumetorum, Actinodura morrisoniana, Aegithalos caudatus,
+  Aegithalos concinnus, Aegithina tiphia, Aethopyga christinae, Aethopyga nipalensis,
+  Ailuroedus melanotis, Alcippe manipurensis, Alcippe morrisonia, Alcippe poioicephala,
+  Anthochaera carunculata, Anthochaera chrysoptera, Aphelocephala leucopsis, Aplonis
+    metallica, Arses kaupi, Artamus cyanopterus, Artamus superciliosus, Baeolophus
+    inornatus, Baeolophus wollweberi, Carduelis chloris, Carpodacus vinaceus, Catharus
+    fuscescens, Catharus guttatus, Catharus ustulatus, Certhia familiaris, Cettia
+    acanthizoides, Chloropsis cochinchinensis, Chthonicola sagittatus, Cissa chinensis,
+  Climacteris affinis, Climacteris erythrops, Climacteris picumnus, Climacteris rufus,
+  Coccothraustes coccothraustes, Colluricincla boweri, Colluricincla harmonica, Conopophila
+    albogularis, Coracina lineata, Coracina novaehollandiae, Corcorax melanorhamphos,
+  Cormobates leucophaea, Corvus macrorhynchos, Culicicapa ceylonensis, Daphoenositta
+    chrysoptera, Dendrocitta formosae, Dendroica caerulescens, Dendroica fusca, Dendroica
+    virens, Dicaeum concolor, Dicaeum erythrorhynchos, Dicaeum hirundinaceum, Dicrurus
+    bracteatus, Dicrurus caerulescens, Dicrurus leucophaeus, Dicrurus macrocercus,
+  Dumetia hyperythra, Empidonax minimus, Empidonax oberholseri, Entomyzon cyanotis,
+  Eopsaltria australis, Eopsaltria griseogularis, Eopsaltria pulverulenta, Epthianura
+    tricolor, Erithacus rubecula, Eumyias albicaudatus, Falcunculus frontatus, Ficedula
+    albicollis, Ficedula nigrorufa, Fringilla coelebs, Garrulax leucolophus, Garrulax
+    morrisonianus, Garrulus glandarius, Gerygone chloronota, Gerygone fusca, Gerygone
+    levigaster, Gerygone magnirostris, Gerygone mouki, Gerygone olivacea, Gymnorhina
+    tibicen, Hemipus picatus, Heteromyias albispecularis, Heterophasia capistrata,
+  Hirundo daurica, Hylocichla mustelina, Hypsipetes leucocephalus, Icterus bullockii,
+  Icterus parisorum, Iole indica, Junco hyemalis, Lalage leucomela, Lanius schach,
+  Lanius tephronotus, Leiothrix lutea, Lichenostomus chrysops, Lichenostomus frenatus,
+  Lichenostomus fuscus, Lichenostomus leucotis, Lichenostomus melanops, Lichenostomus
+    ornatus, Lichenostomus penicillatus, Lichenostomus unicolor, Lichenostomus virescens,
+  Lichmera indistincta, Liocichla steerii, Macronous gularis, Malacocincla abbotti,
+  Malurus cyaneus, Malurus pulcherrimus, Malurus splendens, Manorina melanocephala,
+  Melanodryas cucullata, Melanodryas vittata, Meliphaga gracilis, Meliphaga lewinii,
+  Melithreptus albogularis, Melithreptus brevirostris, Melithreptus lunatus, Melithreptus
+    validirostris, Menura novaehollandiae, Microeca fascinans, Microeca flavigaster,
+  Minla cyanouroptera, Minla ignotincta, Monarcha melanopsis, Monarcha trivirgatus,
+  Muscicapa ferruginea, Muscicapa striata, Myiagra alecto, Myiagra cyanoleuca, Myiagra
+    inquieta, Myiagra rubecula, Myiagra ruficollis, Myiarchus cinerascens, Myiomela
+    major, Myophonus caeruleus, Myzomela erythrocephala, Myzomela obscura, Myzomela
+    sanguinolenta, Nectarinia asiatica, Nectarinia lotenia, Nectarinia minima, Nectarinia
+    zeylonica, Neochmia temporalis, Niltava vivida, Oreoica gutturalis, Oreoscopus
+    gutturalis, Oriolus oriolus, Oriolus xanthornus, Orthonyx spaldingii, Orthotomus
+    sutorius, Pachycephala melanura, Pachycephala pectoralis, Pachycephala rufiventris,
+  Pachycephala simplex, Paradoxornis verreauxi, Pardalotus punctatus, Pardalotus striatus,
+  Parus ater, Parus atricapillus, Parus caeruleus, Parus major, Parus monticolus,
+  Parus palustris, Parus spilonotus, Parus xanthogenys, Pericrocotus brevirostris,
+  Pericrocotus flammeus, Petroica goodenovii, Petroica multicolor, Petroica phoenicea,
+  Petroica rosea, Pheucticus ludovicianus, Philemon buceroides, Philemon citreogularis,
+  Philemon corniculatus, Phylidonyris novaehollandiae, Phylidonyris pyrrhopterus,
+  Phylloscopus affinis, Phylloscopus collybita, Phylloscopus inornatus, Phylloscopus
+    magnirostris, Phylloscopus proregulus, Phylloscopus reguloides, Phylloscopus sibilatrix,
+  Phylloscopus trochiloides, Phylloscopus xanthoschistos, Piranga olivacea, Pitta
+    versicolor, Polioptila caerulea, Pomatorhinus horsfieldii, Pomatostomus superciliosus,
+  Psaltriparus minimus, Psophodes olivaceus, Ptiloris victoriae, Pycnonotus cafer,
+  Pycnonotus jocosus, Pycnonotus luteolus, Pyrocephalus rubinus, Pyrrhula erythaca,
+  Pyrrhula nipalensis, Rhipidura fuliginosa, Rhipidura leucophrys, Rhipidura phasiana,
+  Rhipidura rufifrons, Rhipidura rufiventris, Seicercus burkii, Seiurus aurocapilla,
+  Sericornis citreogularis, Sericornis frontalis, Sericornis magnirostra, Setophaga
+    ruticilla, Sialia mexicana, Sialia sialis, Sitta carolinensis, Sitta castanea,
+  Sitta europaea, Sitta frontalis, Smicrornis brevirostris, Sphecotheres vieilloti,
+  Stachyris erythroptera, Stagonopleura guttata, Strepera graculina, Strepera versicolor,
+  Strophocincla cachinnans, Sylvia atricapilla, Taeniopygia guttata, Tarsiger indicus,
+  Tarsiger johnstoniae, Terpsiphone paradisi, Thryomanes bewickii, Tregellasia capito,
+  Troglodytes troglodytes, Turdoides affinis, Turdoides striata, Turdus merula, Turdus
+    philomelos, Tyrannus vociferans, Vermivora luciae, Vireo gilvus, Vireo olivaceus,
+  Vireo philadelphicus, Vireo solitarius, Xanthotis macleayanus, Yuhina brunneiceps,
+  Yuhina flavicollis, Yuhina occipitalis, Zoothera lunulata, Zosterops japonicus,
+  Zosterops lateralis, Zosterops luteus, Zosterops palpebrosus]
+sample_trees: [EricsonStage2Full_4214.tre, EricsonStage2Full_8758.tre, EricsonStage2Full_6753.tre,
+  EricsonStage2Full_3956.tre, EricsonStage2Full_8759.tre, EricsonStage2Full_3381.tre,
+  EricsonStage2Full_0211.tre, EricsonStage2Full_2315.tre, EricsonStage2Full_7762.tre,
+  EricsonStage2Full_0557.tre, EricsonStage2Full_6286.tre, EricsonStage2Full_4574.tre,
+  EricsonStage2Full_3913.tre, EricsonStage2Full_9181.tre, EricsonStage2Full_6237.tre,
+  EricsonStage2Full_3773.tre, EricsonStage2Full_2977.tre, EricsonStage2Full_2728.tre,
+  EricsonStage2Full_4064.tre, EricsonStage2Full_7078.tre, EricsonStage2Full_2535.tre,
+  EricsonStage2Full_7639.tre, EricsonStage2Full_4135.tre, EricsonStage2Full_9508.tre,
+  EricsonStage2Full_7374.tre, EricsonStage2Full_5107.tre, EricsonStage2Full_1056.tre,
+  EricsonStage2Full_9813.tre, EricsonStage2Full_7182.tre, EricsonStage2Full_0449.tre,
+  EricsonStage2Full_9347.tre, EricsonStage2Full_9182.tre, EricsonStage2Full_4519.tre,
+  EricsonStage2Full_2750.tre, EricsonStage2Full_5350.tre, EricsonStage2Full_2034.tre,
+  EricsonStage2Full_0038.tre, EricsonStage2Full_6658.tre, EricsonStage2Full_2291.tre,
+  EricsonStage2Full_7446.tre, EricsonStage2Full_7652.tre, EricsonStage2Full_0829.tre,
+  EricsonStage2Full_9123.tre, EricsonStage2Full_6118.tre, EricsonStage2Full_0694.tre,
+  EricsonStage2Full_8392.tre, EricsonStage2Full_3789.tre, EricsonStage2Full_4283.tre,
+  EricsonStage2Full_2230.tre, EricsonStage2Full_2395.tre, EricsonStage2Full_8890.tre,
+  EricsonStage2Full_1297.tre, EricsonStage2Full_6112.tre, EricsonStage2Full_5762.tre,
+  EricsonStage2Full_3408.tre, EricsonStage2Full_6192.tre, EricsonStage2Full_4254.tre,
+  EricsonStage2Full_0668.tre, EricsonStage2Full_6555.tre, EricsonStage2Full_2672.tre,
+  EricsonStage2Full_6659.tre, EricsonStage2Full_2903.tre, EricsonStage2Full_2584.tre,
+  EricsonStage2Full_8614.tre, EricsonStage2Full_0555.tre, EricsonStage2Full_8785.tre,
+  EricsonStage2Full_2591.tre, EricsonStage2Full_5212.tre, EricsonStage2Full_5837.tre,
+  EricsonStage2Full_0041.tre, EricsonStage2Full_4273.tre, EricsonStage2Full_9464.tre,
+  EricsonStage2Full_8386.tre, EricsonStage2Full_6449.tre, EricsonStage2Full_8296.tre,
+  EricsonStage2Full_4508.tre, EricsonStage2Full_5144.tre, EricsonStage2Full_2158.tre,
+  EricsonStage2Full_0408.tre, EricsonStage2Full_1648.tre, EricsonStage2Full_9337.tre,
+  EricsonStage2Full_6595.tre, EricsonStage2Full_9404.tre, EricsonStage2Full_8380.tre,
+  EricsonStage2Full_4692.tre, EricsonStage2Full_1689.tre, EricsonStage2Full_8507.tre,
+  EricsonStage2Full_2314.tre, EricsonStage2Full_9324.tre, EricsonStage2Full_6239.tre,
+  EricsonStage2Full_4300.tre, EricsonStage2Full_1473.tre, EricsonStage2Full_3062.tre,
+  EricsonStage2Full_2599.tre, EricsonStage2Full_9033.tre, EricsonStage2Full_0798.tre,
+  EricsonStage2Full_1619.tre, EricsonStage2Full_0419.tre, EricsonStage2Full_0719.tre,
+  EricsonStage2Full_9483.tre]
+status: CREATED
+created_at: "2025-02-16T19:40:07Z"
+completed_at: ""
+bad_names: {}
