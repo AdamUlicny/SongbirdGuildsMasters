@@ -317,7 +317,7 @@ legend("topleft",
 set.seed(12345)
 dendlist(dendro_bray, dendro_phylo)%>%
   dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
@@ -327,12 +327,13 @@ dendlist(dendro_bray, dendro_phylo)%>%
              main_left="behavior",
              main_right="phylogeny",
              hang=F)
-
+mantel_CZ <- mantel(dist_Bray_North_America, phylo_North_America, method = "spearman", permutations = 9999)
+print(mantel_North_America)
 # Using Jaccard
 
 dendlist(dendro_bray, dendro_jaccard)%>%
   dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
