@@ -18,6 +18,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 sp_list_meta <- read.csv("data/sp_list_meta.csv")
 method_substrate_meta <- read.csv("data/method_substrate_meta.csv")
 
+##### Data preparation ###########
 # filtering out non-passerines
 method_substrate_meta<-method_substrate_meta%>%
   inner_join(sp_list_meta%>%filter(Passeriformes=="PASSERIFORMES"), by="Sp_BirdLife")
@@ -27,14 +28,14 @@ method_substrate_subset<-method_substrate_meta%>%
   group_by(Sp_BirdLife)%>%
   mutate_all(~replace(., is.na(.), 0))%>%
   summarise(across(where(is.numeric), sum, na.rm = F))%>%
-  filter(N_BEH >= 10  & N_SUB >= 10)
+  filter(N_BEH >= 10  & N_SUB >= 10) # current arbitrary criteria for inclusion in the analysis
 
 
 method_substrate_continents<-method_substrate_meta%>%
   group_by(continent,Sp_BirdLife)%>%
   mutate_all(~replace(., is.na(.), 0))%>%
   summarise(across(where(is.numeric), sum, na.rm = F))%>%
-  filter(N_BEH >= 10  & N_SUB >= 10)
+  filter(N_BEH >= 10  & N_SUB >= 10) # current arbitrary criteria for inclusion in the analysis
 
 
 # make list of species in  global subset
@@ -64,7 +65,7 @@ matrix_meta_full <- method_substrate_subset%>%
   remove_rownames%>%
   column_to_rownames(var="Sp_BirdLife")
 
-# Bray-Curtis distance calculation
+############## Bray-Curtis distance calculation ##################
 dist_Bray_Global <- matrix_meta_full%>%
   vegdist(method = "bray")
 dist_Bray_Global<-as.matrix(dist_Bray_Global)
@@ -84,15 +85,15 @@ phylo_meta <- as.dist(phylo_meta[order(rownames(phylo_meta)),order(colnames(phyl
 dendro_meta_phylo <- hclust(phylo_meta) %>%
   as.dendrogram
 
-# Plotting the dendrogram
+###########  Plotting the guilds dendrogram ###########
 par(mar=c(5,1,1,12))
 plot(dendro_meta_bray, main = "Foraging guilds Meta ", type = "rectangle", horiz = T)
 
-# Phylogeny - GLobal Guilds Co-dendrogram
+############# Phylogeny - Global Guilds Co-dendrogram ####################
 set.seed(12345)
 dendlist(dendro_meta_bray, dendro_meta_phylo)%>%
-  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
@@ -102,7 +103,7 @@ dendlist(dendro_meta_bray, dendro_meta_phylo)%>%
              main_left="foraging guilds",
              main_right="phylogeny",
              hang=F)%>%
-  entanglement()
+  entanglement()# lower entanglement = better readability
 mantel_Global <- mantel(dist_Bray_Global, phylo_meta, method = "spearman", permutations = 999)
 print(mantel_Global)
 
@@ -125,11 +126,9 @@ for (current_continent in unique_continents) {
 # create subsets per continen
 per_continent <- function(method_substrate_meta) {
   continents <- unique(method_substrate_meta$continent)  # Extract unique continents
-  distance_list_continents <- list()  # Initialize empty list to store dendrograms
+  distance_list_continents <- list()  
   
   for (cont in continents) {
-    cat("\nProcessing:", cont, "\n")  # Print progress
-    
     # Subset and process the data
     filtered_data <- method_substrate_meta %>%
       filter(continent == cont) %>%
@@ -148,7 +147,7 @@ per_continent <- function(method_substrate_meta) {
     distance_list_continents[[cont]] <- dist_matrix
   }
   
-  return(distance_list_continents)  # Return list of distance matrices for further analysis
+  return(distance_list_continents)  # Return list of distance matrices
 }
 
 distance_list_continents<-per_continent(method_substrate_meta)
@@ -222,8 +221,8 @@ dendro_North_America_bray <- dist_Bray_North_America%>%
 
 ### Dendrograms per continent
 dendlist(dendro_Europe_bray, dendro_Europe_phylo)%>%
-  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
@@ -234,13 +233,13 @@ dendlist(dendro_Europe_bray, dendro_Europe_phylo)%>%
              main_right="phylogeny",
              main="Europe",
              hang=F)%>%
-  entanglement()
-mantel_Europe <- mantel(dist_Bray_Europe, phylo_Europe, method = "spearman", permutations = 9999)
+  entanglement() # lower entanglement = better readability
+mantel_Europe <- mantel(dist_Bray_Europe, phylo_Europe, method = "spearman", permutations = 999)
 print(mantel_Europe)
 
 dendlist(dendro_Asia_bray, dendro_Asia_phylo)%>%
-  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%############## For troubleshooting, use "%>% entanglement()" to assess entanglement (lower is better)
+  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
@@ -251,12 +250,12 @@ dendlist(dendro_Asia_bray, dendro_Asia_phylo)%>%
              main_right="phylogeny",
              main="Asia",
              hang=F)%>%
-  entanglement()
-mantel_Asia <- mantel(dist_Bray_Asia, phylo_Asia, method = "spearman", permutations = 9999)
+  entanglement()# lower entanglement = better readability
+mantel_Asia <- mantel(dist_Bray_Asia, phylo_Asia, method = "spearman", permutations = 999)
 print(mantel_Asia)
 
 dendlist(dendro_North_America_bray, dendro_North_America_phylo)%>%
-  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
   dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
@@ -268,12 +267,12 @@ dendlist(dendro_North_America_bray, dendro_North_America_phylo)%>%
              main_right="phylogeny",
              main="North_America",
              hang=F)%>%
-  entanglement()
-mantel_North_America <- mantel(dist_Bray_North_America, phylo_North_America, method = "spearman", permutations = 9999)
+  entanglement()# lower entanglement = better readability
+mantel_North_America <- mantel(dist_Bray_North_America, phylo_North_America, method = "spearman", permutations = 999)
 print(mantel_North_America)
 
 dendlist(dendro_Australia_bray, dendro_Australia_phylo)%>%
-  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
+  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
   dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before
              highlight_distinct_edges  = FALSE,
@@ -285,6 +284,6 @@ dendlist(dendro_Australia_bray, dendro_Australia_phylo)%>%
              main_right="phylogeny",
              main="Australia",
              hang=F)%>%
-  entanglement()
-mantel_Australia <- mantel(dist_Bray_Australia, phylo_Australia, method = "spearman", permutations = 9999)
+  entanglement()# lower entanglement = better readability
+mantel_Australia <- mantel(dist_Bray_Australia, phylo_Australia, method = "spearman", permutations = 999)
 print(mantel_Australia)

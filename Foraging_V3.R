@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 ######### Foraging Guilds and Specialization of songbirds in a Czech Lowland Deciduous forest ############
 ################################# Libraries ##############################################################
 library(tidyverse)
