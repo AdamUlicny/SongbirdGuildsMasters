@@ -57,6 +57,7 @@ filter_list<-sp_list_meta%>%
 # Species count per continent
 counts_per_continent <- method_substrate_meta%>%
   group_by(continent)%>%
+  filter(N_BEH >= 10  & N_SUB >= 10)%>%
   summarise(n_distinct(Sp_BirdLife))
 
 # matrix preparation
