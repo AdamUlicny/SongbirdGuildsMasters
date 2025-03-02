@@ -81,7 +81,7 @@ dendro_meta_bray <- dist_Bray_Global %>% # clustering using ward.D2
 
 ########## Gower distance calculation ################
 dist_Gower_Global <- matrix_meta_full%>%
-  vegdist(method = "gower")
+  vegdist(method = "altGower")
 dist_Gower_Global<-as.matrix(dist_Gower_Global)
 dist_Gower_Global<-as.dist(dist_Gower_Global[order(rownames(dist_Gower_Global)),order(colnames(dist_Gower_Global))])
 
@@ -144,7 +144,7 @@ mantel_Global2 <- mantel(dist_Gower_Global, phylo_meta_mantel, method = "spearma
 print(mantel_Global2)
 
 
-
+# NOT DONE YET
 ######################### Function for separate continents###########################
 #loop that produces list_sp per continent
 # Get the continents
