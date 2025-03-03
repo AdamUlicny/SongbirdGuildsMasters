@@ -196,7 +196,7 @@ Loxia curvirostra;Loxia_curvirostra;Carrascal1987;0;0;0;0;0;0;0;20.58;0;20.58;0;
 Periparus ater;Parus_ater;Carrascal1987;0;0;0;0;0;0;4.34;156.24;0;4.34;264.74;8.68;0;438.34;Europe;Spain;Ulicny;PASSERIFORMES
 Cyanistes caeruleus;Parus_caeruleus;Carrascal1987;0;0;0;0;0;0;6.98;184.97;0;10.47;150.07;0;0;352.49;Europe;Spain;Ulicny;PASSERIFORMES
 Lophophanes cristatus;Parus_cristatus;Carrascal1987;0;0;0;0;0;0;0;234.78;0;10.32;10.32;0;0;255.42;Europe;Spain;Ulicny;PASSERIFORMES
-Parus cinereus;Parus_major;Carrascal1987;0;0;0;0;0;0;8.16;36.72;0;17.34;40.8;0;0;103.02;Europe;Spain;Ulicny;PASSERIFORMES
+Parus major;Parus_major;Carrascal1987;0;0;0;0;0;0;8.16;36.72;0;17.34;40.8;0;0;103.02;Europe;Spain;Ulicny;PASSERIFORMES
 Phylloscopus bonelli;Phylloscopus_bonelli;Carrascal1987;0;0;0;0;0;0;66.99;30.03;0;9.24;124.74;0;0;231;Europe;Spain;Ulicny;PASSERIFORMES
 Phylloscopus collybita;Phylloscopus_collybita;Carrascal1987;0;0;0;0;0;0;17.43;34.86;0;0.83;29.88;0;0;83;Europe;Spain;Ulicny;PASSERIFORMES
 Prunella modularis;Prunella_modularis;Carrascal1987;0;0;0;0;0;0;0;5.12;0;38.96;9.92;0;0;54;Europe;Spain;Ulicny;PASSERIFORMES
@@ -290,7 +290,7 @@ Vireo griseus;Vireo_griseus;Jones2020;2.814;32.172;1.386;4.2;0;0;1.386;7.014;0;0
 Sphyrapicus varius;Sphyrapicus_varius;Jones2020;0;0.819;0;0;38.181;0;0;35.685;0;0;0;3.315;39;39;North_America;Florida;Ulicny;NONPASSERIFORMES
 Setophaga dominica;Dendroica_dominica;Jones2020;0;15.26;0;0;52.78;0;1.05;12.18;0;0;26.39;30.52;68.04;70.14;North_America;Florida;Ulicny;PASSERIFORMES
 Zosterops japonicus;Zosterops_japonicus;Kwok2009;31.347;617.463;44.469;0;35.721;0;;142;16;0;544;2.5;729;688.5;Asia;Hong Kong;Ulicny;PASSERIFORMES
-Parus cinereus;Parus_major;Kwok2009;82.875;497.25;25.194;0;57.681;0;;425;4;0;295;4.3;663;724.3;Asia;Hong Kong;Ulicny;PASSERIFORMES
+Parus major;Parus_major;Kwok2009;82.875;497.25;25.194;0;57.681;0;;425;4;0;295;4.3;663;724.3;Asia;Hong Kong;Ulicny;PASSERIFORMES
 Machlolophus spilonotus;Parus_spilonotus;Kwok2009;0;75;0;0;0;0;;37;1;0;25;5.3;75;67.3;Asia;Hong Kong;Ulicny;PASSERIFORMES
 Sitta frontalis;Sitta_frontalis;Kwok2009;0;85.14;0;0;172.86;0;;249;0;0;0;2.3;258;251.3;Asia;Hong Kong;Ulicny;PASSERIFORMES
 Actinodura cyanouroptera;Minla_cyanouroptera;Kwok2009;0;254;0;0;0;0;;77;1;0;168;0.4;254;245.4;Asia;Hong Kong;Ulicny;PASSERIFORMES
@@ -533,7 +533,7 @@ Ficedula hypoleuca;Ficedula_hypoleuca;Ulicny25;2;1;3;1;0;0;2;4;0;1;0;0;7;7;Europ
 Fringilla coelebs;Fringilla_coelebs;Ulicny25;2;133;48;0;0;6;2;89;0;9;89;0;189;189;Europe;Czech Republic;Ulicny;PASSERIFORMES
 Muscicapa striata;Muscicapa_striata;Ulicny25;22;0;0;0;0;4;22;0;0;0;4;0;26;26;Europe;Czech Republic;Ulicny;PASSERIFORMES
 Oriolus kundoo;Oriolus_oriolus;Ulicny25;0;10;0;0;0;0;0;0;0;0;10;0;10;10;Europe;Czech Republic;Ulicny;PASSERIFORMES
-Parus cinereus;Parus_major;Ulicny25;2;505;22;0;0;4;2;236;0;54;239;2;533;533;Europe;Czech Republic;Ulicny;PASSERIFORMES
+Parus major;Parus_major;Ulicny25;2;505;22;0;0;4;2;236;0;54;239;2;533;533;Europe;Czech Republic;Ulicny;PASSERIFORMES
 Phoenicurus phoenicurus;Phoenicurus_phoenicurus;Ulicny25;0;2;3;0;0;0;0;0;0;0;5;0;5;5;Europe;Czech Republic;Ulicny;PASSERIFORMES
 Phylloscopus collybita;Phylloscopus_collybita;Ulicny25;0;62;11;0;0;3;0;29;0;1;44;2;76;76;Europe;Czech Republic;Ulicny;PASSERIFORMES
 Phylloscopus sibilatrix;Phylloscopus_sibilatrix;Ulicny25;0;51;17;0;0;5;0;32;0;1;40;0;73;73;Europe;Czech Republic;Ulicny;PASSERIFORMES

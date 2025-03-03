@@ -108,7 +108,7 @@ plot(dendro_meta_bray, main = "Foraging guilds Bray-Curtis", type = "rectangle",
 plot(dendro_meta_gower, main = "Foraging guilds Gower", type = "rectangle", horiz = T)
 
 
-############# Phylogeny - Global Guilds Co-dendrogram ####################
+############# Global Co-dendrogram ####################
 set.seed(12345)
 dendlist(dendro_meta_phylo, dendro_meta_bray)%>%
   dendextend::untangle(method="ladderize")%>%
@@ -144,8 +144,8 @@ mantel_Global2 <- mantel(dist_Gower_Global, phylo_meta_mantel, method = "spearma
 print(mantel_Global2)
 
 
-# NOT DONE YET
-######################### Function for separate continents###########################
+
+######################### Separate continents ###########################
 #loop that produces list_sp per continent
 # Get the continents
 unique_continents <- unique(method_substrate_continents$continent)
@@ -154,9 +154,8 @@ unique_continents <- unique(method_substrate_continents$continent)
 for (current_continent in unique_continents) {
   continent_species <- method_substrate_continents %>%
     filter(continent == current_continent) %>%
-    pull(Sp_BirdLife)
-  filtered_species<-setdiff(list_sp, continent_species)
-  assign(paste0("filter_not_in_", current_continent), filtered_species)
+    pull(Sp_eBird)
+  assign(paste0("sp_", current_continent), continent_species)
 }
 
 # create subsets per continen
@@ -168,13 +167,13 @@ per_continent <- function(method_substrate_meta) {
     # Subset and process the data
     filtered_data <- method_substrate_meta %>%
       filter(continent == cont) %>%
-      group_by(Sp_BirdLife) %>%
+      group_by(Sp_eBird) %>%
       mutate_all(~replace(., is.na(.), 0)) %>%
       summarise(across(where(is.numeric), sum, na.rm = FALSE)) %>%
       filter(N_BEH >= 30 & N_SUB >= 30) %>%
       select(-c(N_BEH, N_SUB)) %>%
       remove_rownames() %>%
-      column_to_rownames(var = "Sp_BirdLife")
+      column_to_rownames(var = "Sp_eBird")
     
     # Compute Bray-Curtis dissimilarity
     dist_matrix <- vegdist(filtered_data, method = "bray")
@@ -187,42 +186,6 @@ per_continent <- function(method_substrate_meta) {
 }
 
 distance_list_continents<-per_continent(method_substrate_meta)
-
-phylo_meta <- read.nexus("resources/phylo/phylo_meta_v2/output.nex")
-phylo_meta <- phylo_meta[[10]]
-
-# Asia
-phylo_Asia <- ape::drop.tip(phylo_meta, filter_not_in_Asia)
-phylo_Asia <- cophenetic(phylo_Asia)
-phylo_Asia <- as.matrix(phylo_Asia)
-phylo_Asia <- as.dist(phylo_Asia[order(rownames(phylo_Asia)),order(colnames(phylo_Asia))])
-dendro_Asia_phylo <- hclust(phylo_Asia) %>%
-  as.dendrogram
-
-#Australia
-phylo_Australia <- ape::drop.tip(phylo_meta, filter_not_in_Australia)
-phylo_Australia <- cophenetic(phylo_Australia)
-phylo_Australia <- as.matrix(phylo_Australia)
-phylo_Australia <- as.dist(phylo_Australia[order(rownames(phylo_Australia)),order(colnames(phylo_Australia))])
-dendro_Australia_phylo <- hclust(phylo_Australia) %>%
-  as.dendrogram
-
-
-# Europe
-phylo_Europe <- ape::drop.tip(phylo_meta, filter_not_in_Europe)
-phylo_Europe <- cophenetic(phylo_Europe)
-phylo_Europe <- as.matrix(phylo_Europe)
-phylo_Europe <- as.dist(phylo_Europe[order(rownames(phylo_Europe)),order(colnames(phylo_Europe))])
-dendro_Europe_phylo <- hclust(phylo_Europe) %>%
-  as.dendrogram
-
-# North America
-phylo_North_America <- ape::drop.tip(phylo_meta, filter_not_in_North_America)
-phylo_North_America <- cophenetic(phylo_North_America)
-phylo_North_America <- as.matrix(phylo_North_America)
-phylo_North_America <- as.dist(phylo_North_America[order(rownames(phylo_North_America)),order(colnames(phylo_North_America))])
-dendro_North_America_phylo <- hclust(phylo_North_America) %>%
-  as.dendrogram
 
 # order distance matrices alphabetically and create dendrograms
 dist_Bray_Asia <- distance_list_continents[["Asia"]]
@@ -246,78 +209,115 @@ dendro_Europe_bray <- dist_Bray_Europe%>%
   hclust(method = "ward.D2") %>%
   as.dendrogram
 
-dist_Bray_North_America <- distance_list_continents[["North America"]]
+dist_Bray_North_America <- distance_list_continents[["North_America"]]
 dist_Bray_North_America<- as.matrix (dist_Bray_North_America)
 dist_Bray_North_America<-as.dist(dist_Bray_North_America[order(rownames(dist_Bray_North_America)),order(colnames(dist_Bray_North_America))])
 dendro_North_America_bray <- dist_Bray_North_America%>% 
   hclust(method = "ward.D2") %>%
   as.dendrogram
 
+############### Phylogeny per continents ##################
+# load phylogeny for each continent
+phylo_Asia <- extractTree(species=sp_Asia, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_Australia <- extractTree(species=sp_Australia, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_Europe <- extractTree(species=sp_Europe, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_North_America <- extractTree(species=sp_North_America, output.type="scientific", taxonomy.year=2021, version="current")
+
+#matrix for mantel
+phylo_Asia_mantel <- as.dist(
+  as.matrix(cophenetic(phylo_Asia))[order(rownames(cophenetic(phylo_Asia))), 
+                                    order(colnames(cophenetic(phylo_Asia)))])
+
+phylo_Australia_mantel <- as.dist(
+  as.matrix(cophenetic(phylo_Australia))[order(rownames(cophenetic(phylo_Australia))), 
+                                    order(colnames(cophenetic(phylo_Australia)))])
+
+phylo_Europe_mantel <- as.dist(
+  as.matrix(cophenetic(phylo_Europe))[order(rownames(cophenetic(phylo_Europe))), 
+                                    order(colnames(cophenetic(phylo_Europe)))])
+
+phylo_North_America_mantel <- as.dist(
+  as.matrix(cophenetic(phylo_North_America))[order(rownames(cophenetic(phylo_North_America))), 
+                                    order(colnames(cophenetic(phylo_North_America)))])
+
+# dendro for each continent
+phylo_Asia_ultra <- chronos(phylo_Asia)
+phylo_Asia_ultra$tip.label <- gsub("_", " ", phylo_Asia_ultra$tip.label)
+dendro_Asia_phylo <- as.dendrogram(phylo_Asia_ultra)
+
+phylo_Australia_ultra <- chronos(phylo_Australia)
+phylo_Australia_ultra$tip.label <- gsub("_", " ", phylo_Australia_ultra$tip.label)
+dendro_Australia_phylo <- as.dendrogram(phylo_Australia_ultra)
+
+phylo_Europe_ultra <- chronos(phylo_Europe)
+phylo_Europe_ultra$tip.label <- gsub("_", " ", phylo_Europe_ultra$tip.label)
+dendro_Europe_phylo <- as.dendrogram(phylo_Europe_ultra)
+
+phylo_North_America_ultra <- chronos(phylo_North_America)
+phylo_North_America_ultra$tip.label <- gsub("_", " ", phylo_North_America_ultra$tip.label)
+dendro_North_America_phylo <- as.dendrogram(phylo_North_America_ultra)
+
 ### Dendrograms per continent
-dendlist(dendro_Europe_bray, dendro_Europe_phylo)%>%
-  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%
+dendlist(dendro_Asia_phylo, dendro_Asia_bray)%>%
+  dendextend::untangle(method="ladderize")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
              margin_outer=7,
              lwd=3,
-             main_left="foraging guilds",
-             main_right="phylogeny",
+             main_left="phylogeny",
+             main_right="Bray-Curtis",
+             main="Asia",
+             hang=F)%>%
+  entanglement() # lower entanglement = better readability
+mantel_Asia <- mantel(dist_Bray_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
+print(mantel_Asia)
+
+dendlist(dendro_Australia_phylo, dendro_Australia_bray)%>%
+  dendextend::untangle(method="ladderize")%>%
+  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="phylogeny",
+             main_right="Bray-Curtis",
+             main="Australia",
+             hang=F)%>%
+  entanglement() # lower entanglement = better readability
+mantel_Australia <- mantel(dist_Bray_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
+print(mantel_Australia)
+
+dendlist(dendro_Europe_phylo, dendro_Europe_bray)%>%
+  dendextend::untangle(method="ladderize")%>%
+  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="phylogeny",
+             main_right="Bray-Curtis",
              main="Europe",
              hang=F)%>%
   entanglement() # lower entanglement = better readability
-mantel_Europe <- mantel(dist_Bray_Europe, phylo_Europe, method = "spearman", permutations = 999)
+mantel_Europe <- mantel(dist_Bray_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
 print(mantel_Europe)
 
-dendlist(dendro_Asia_bray, dendro_Asia_phylo)%>%
-  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%
+dendlist(dendro_North_America_phylo, dendro_North_America_bray)%>%
+  dendextend::untangle(method="ladderize")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
              margin_outer=7,
              lwd=3,
-             main_left="foraging guilds",
-             main_right="phylogeny",
-             main="Asia",
-             hang=F)%>%
-  entanglement()# lower entanglement = better readability
-mantel_Asia <- mantel(dist_Bray_Asia, phylo_Asia, method = "spearman", permutations = 999)
-print(mantel_Asia)
-
-dendlist(dendro_North_America_bray, dendro_North_America_phylo)%>%
-  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="foraging guilds",
-             main_right="phylogeny",
+             main_left="phylogeny",
+             main_right="Bray-Curtis",
              main="North_America",
              hang=F)%>%
-  entanglement()# lower entanglement = better readability
-mantel_North_America <- mantel(dist_Bray_North_America, phylo_North_America, method = "spearman", permutations = 999)
+  entanglement() # lower entanglement = better readability
+mantel_North_America <- mantel(dist_Bray_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
 print(mantel_North_America)
-
-dendlist(dendro_Australia_phylo, dendro_Australia_bray)%>%
-  dendextend::untangle(method="random", R=50)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="foraging guilds",
-             main_right="phylogeny",
-             main="Australia",
-             hang=F)%>%
-  entanglement()# lower entanglement = better readability
-mantel_Australia <- mantel(dist_Bray_Australia, phylo_Australia, method = "spearman", permutations = 999)
-print(mantel_Australia)
