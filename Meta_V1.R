@@ -9,6 +9,7 @@ library(RColorBrewer)
 library(factoextra)
 library(treemap)
 library(clootl)
+library(rgbif)
 
 # set wd
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -16,6 +17,22 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Load the data
 #sp_list_meta <- read.csv("data/sp_list_meta.csv")
 method_substrate_meta <- read.csv("data/method_substrate_meta.csv",sep=";")
+
+# translate species names
+translate_to_gbif <- function(species_name) {
+  result <- name_backbone(name = species_name)
+  if (!is.null(result$usageKey)) {
+    return(result$canonicalName)
+  } else {
+    return(NA)
+  }
+}
+
+method_substrate_meta<-method_substrate_meta%>%
+  mutate(Sp_eBird = sapply(Sp_BirdLife, translate_to_gbif))
+
+unmatched_species <- method_substrate_meta %>%
+  filter(is.na(Sp_eBird))
 
 # version without OTHER substrate, recalculated N_BEH and N_SUB
 method_substrate_meta <- method_substrate_meta %>%
