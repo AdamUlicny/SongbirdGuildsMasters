@@ -10,6 +10,7 @@ library(factoextra)
 library(treemap)
 library(clootl)
 library(rgbif)
+library(taxize)
 
 # set wd
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -17,6 +18,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # Load the data
 #sp_list_meta <- read.csv("data/sp_list_meta.csv")
 method_substrate_meta <- read.csv("data/method_substrate_meta.csv",sep=";")
+eBird_full <- read.csv("resources/eBird_full.csv",sep=";")
 
 # translate species names
 translate_to_gbif <- function(species_name) {
@@ -28,8 +30,24 @@ translate_to_gbif <- function(species_name) {
   }
 }
 
+translate_to_ITIS <- function(species_name) {
+  result <- gnr_resolve(names = species_name, data_source_ids = "itis")  # ITIS (3) + GBIF (12)
+  
+  if (nrow(result) > 0) {
+    return(result$matched_name[1])  # Return the first matched name
+  } else {
+    return(NA)  # If no match found, return NA
+  }
+}
+
 method_substrate_meta<-method_substrate_meta%>%
-  mutate(Sp_eBird = sapply(Sp_BirdLife, translate_to_gbif))
+  mutate(Sp_BirdLife = gsub("_", " ", Sp_BirdLife)) %>%
+  mutate(Sp_eBird = sapply(Sp_BirdLife, translate_to_ITIS))
+
+sp_list_meta<-method_substrate_meta%>%
+  select(Sp_eBird)
+
+differences_sp_list <- setdiff(sp_list_meta, eBird_full)
 
 unmatched_species <- method_substrate_meta %>%
   filter(is.na(Sp_eBird))
