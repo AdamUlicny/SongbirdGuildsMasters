@@ -328,8 +328,8 @@ dendlist(dendro_bray, dendro_phylo)%>%
              hang=F)
 mantel_CZ <- mantel(dist_Bray_North_America, phylo_North_America, method = "spearman", permutations = 9999)
 print(mantel_North_America)
-# Using Jaccard
 
+# Using jaccard
 dendlist(dendro_bray, dendro_jaccard)%>%
   dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
   dendextend::untangle(method="step2side")%>%

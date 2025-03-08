@@ -1,4 +1,6 @@
 ############### Analysing large scale patterns of Guild membership and phylogenetic signal ###############
+
+############### Load libraries ###############
 library(tidyverse)
 library(readxl)
 library(rstudioapi)
@@ -10,14 +12,16 @@ library(factoextra)
 library(treemap)
 library(clootl)
 
-# set wd
+# Set working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Load the data
-#sp_list_meta <- read.csv("data/sp_list_meta.csv")
-method_substrate_meta <- read.csv("data/method_substrate_meta.csv")
+method_substrate_meta <- read.csv("data/method_substrate_meta.csv") # behavioral data
+
+morphology <- read_xlsx("resources/AVONET/AVONET Supplementary dataset 1.xlsx", sheet = "AVONET2_eBird") # AVONET morphology
 
 
+##### Data preparation ###########
 # version without OTHER substrate, recalculated N_BEH and N_SUB
 method_substrate_meta <- method_substrate_meta %>%
   select(-(15:17)) %>%
@@ -26,7 +30,6 @@ method_substrate_meta <- method_substrate_meta %>%
   mutate(N_BEH = sum(c_across(4:9)),
          N_SUB = sum(c_across(10:14)))
 
-##### Data preparation ###########
 # filtering out non-passerines
 method_substrate_meta<-method_substrate_meta%>%
   filter(Order=="PASSERIFORMES")
@@ -44,27 +47,45 @@ method_substrate_continents<-method_substrate_meta%>%
   filter(N_BEH >= 30  & N_SUB >= 30) # current arbitrary criteria for inclusion in the analysis
 
 
-# make list of species in  global subset
-#list_sp <- method_substrate_subset%>%pull(Sp_eBird)
-#write.csv(list_sp, "resources/list_sp_meta_v2.csv")
-
-# Load the new phylogeny matching tips  
-#phylo_meta <- read.nexus("resources/phylo/phylo_meta_v2/output.nex")
-
-#sp_ebird <- read.csv("resources/sp_list_ebird.csv", sep=";")
-
+############################ Phylogeny###################
 sp<-method_substrate_subset%>%
   pull(Sp_eBird)
 
 phylo_meta <- extractTree(species=sp, output.type="scientific", taxonomy.year=2021, version="current")
 
-# Species count per continent
+
+########################## Morphology #################
+morphology<-morphology%>%
+  rename(Sp_eBird=Species2)
+
+morphology_Global<-morphology%>%
+  inner_join(method_substrate_subset, by="Sp_eBird")%>%
+  select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
+         Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
+  mutate_at(2:8, log)
+
+morphology_Global_matrix <- morphology_Global%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")
+
+### distance matrix
+dist_morpho_Global<-vegdist(morphology_Global_matrix, method="euclidean")
+## alphabetical sorting
+dist_morpho_Global <- as.matrix(dist_morpho_Global)
+dist_morpho_Global <- as.dist(dist_morpho_Global[order(rownames(dist_morpho_Global)),order(colnames(dist_morpho_Global))])
+
+## cluster 
+dendro_Global_morpho<-dist_morpho_Global %>%
+  hclust(method="ward.D2")%>%
+  as.dendrogram()
+
+#################### Species count per continent ##################
 counts_per_continent <- method_substrate_meta%>%
   group_by(continent)%>%
   filter(N_BEH >= 30  & N_SUB >= 30)%>%
   summarise(n_distinct(Sp_eBird))
 
-# matrix preparation
+#################### Matrix preparation ##########################
 matrix_meta_full <- method_substrate_subset%>%
   select(-c(N_BEH,N_SUB))%>%
   remove_rownames%>%
@@ -107,43 +128,6 @@ dendro_meta_phylo <- as.dendrogram(phylo_meta_ultra)
 par(mar=c(5,1,1,12))
 plot(dendro_meta_bray, main = "Foraging guilds Bray-Curtis", type = "rectangle", horiz = T)
 plot(dendro_meta_gower, main = "Foraging guilds Gower", type = "rectangle", horiz = T)
-
-
-############# Global Co-dendrogram ####################
-set.seed(12345)
-dendlist(dendro_meta_phylo, dendro_meta_bray)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="Phylogeny",
-             main_right="Bray-Curtis",
-             hang=F)%>%
-  entanglement()# lower entanglement = better readability
-
-mantel_Global <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
-print(mantel_Global)
-
-dendlist(dendro_meta_phylo, dendro_meta_gower)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="Phylogeny",
-             main_right="Gower",
-             hang=F)%>%
-  entanglement()# lower entanglement = better read
-
-
-mantel_Global2 <- mantel(dist_Gower_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
-print(mantel_Global2)
-
 
 
 ######################### Separate continents ###########################
@@ -258,10 +242,174 @@ phylo_North_America_ultra <- chronos(phylo_North_America)
 phylo_North_America_ultra$tip.label <- gsub("_", " ", phylo_North_America_ultra$tip.label)
 dendro_North_America_phylo <- as.dendrogram(phylo_North_America_ultra)
 
-### Dendrograms per continent
-dendlist(dendro_Asia_phylo, dendro_Asia_bray)%>%
+#################### Morphology per continent ##################
+
+
+############## Asia
+morphology_Asia<-morphology%>%
+  filter(Sp_eBird %in% sp_Asia)%>%
+  select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
+         Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
+  mutate_at(2:8, log)
+
+morphology_Asia_matrix <- morphology_Asia%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")
+
+# distance matrix, sorted alphabetically
+dist_morpho_Asia<-vegdist(morphology_Asia_matrix, method="euclidean")
+dist_morpho_Asia <- as.matrix(dist_morpho_Asia)
+dist_morpho_Asia <- as.dist(dist_morpho_Asia[order(rownames(dist_morpho_Asia)),order(colnames(dist_morpho_Asia))])
+
+# clustering 
+dendro_Asia_morpho<-dist_morpho_Asia %>%
+  hclust(method="ward.D2")%>%
+  as.dendrogram()
+
+################ Australia
+morphology_Australia<-morphology%>%
+  filter(Sp_eBird %in% sp_Australia)%>%
+  select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
+         Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
+  mutate_at(2:8, log)
+
+morphology_Australia_matrix <- morphology_Australia%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")
+
+### distance matrix
+dist_morpho_Australia<-vegdist(morphology_Australia_matrix, method="euclidean")
+## alphabetical sorting
+dist_morpho_Australia <- as.matrix(dist_morpho_Australia)
+dist_morpho_Australia <- as.dist(dist_morpho_Australia[order(rownames(dist_morpho_Australia)),order(colnames(dist_morpho_Australia))])
+
+## cluster 
+dendro_Australia_morpho<-dist_morpho_Australia %>%
+  hclust(method="ward.D2")%>%
+  as.dendrogram()
+
+################ Europe
+morphology_Europe<-morphology%>%
+  filter(Sp_eBird %in% sp_Europe)%>%
+  select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
+         Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
+  mutate_at(2:8, log)
+
+morphology_Europe_matrix <- morphology_Europe%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")
+
+### distance matrix
+dist_morpho_Europe<-vegdist(morphology_Europe_matrix, method="euclidean")
+## alphabetical sorting
+dist_morpho_Europe <- as.matrix(dist_morpho_Europe)
+dist_morpho_Europe <- as.dist(dist_morpho_Europe[order(rownames(dist_morpho_Europe)),order(colnames(dist_morpho_Europe))])
+
+## cluster 
+dendro_Europe_morpho<-dist_morpho_Europe %>%
+  hclust(method="ward.D2")%>%
+  as.dendrogram()
+
+
+######## North America
+
+morphology_North_America<-morphology%>%
+  filter(Sp_eBird %in% sp_North_America)%>%
+  select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
+         Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
+  mutate_at(2:8, log)
+
+morphology_North_America_matrix <- morphology_North_America%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")
+
+### distance matrix
+dist_morpho_North_America<-vegdist(morphology_North_America_matrix, method="euclidean")
+## alphabetical sorting
+dist_morpho_North_America <- as.matrix(dist_morpho_North_America)
+dist_morpho_North_America <- as.dist(dist_morpho_North_America[order(rownames(dist_morpho_North_America)),order(colnames(dist_morpho_North_America))])
+
+## cluster 
+dendro_North_America_morpho<-dist_morpho_North_America %>%
+  hclust(method="ward.D2")%>%
+  as.dendrogram()
+
+
+
+############# Global Co-dendrogram ####################
+set.seed(12345)
+dendlist(dendro_meta_phylo, dendro_meta_bray)%>%
   dendextend::untangle(method="ladderize")%>%
   tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="Phylogeny",
+             main_right="Bray-Curtis",
+             hang=F)%>%
+  entanglement()# lower entanglement = better readability
+
+mantel_Global <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
+print(mantel_Global)
+
+dendlist(dendro_meta_phylo, dendro_meta_gower)%>%
+  dendextend::untangle(method="ladderize")%>%
+  tanglegram(common_subtrees_color_lines = TRUE, 
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="Phylogeny",
+             main_right="Gower",
+             hang=F)%>%
+  entanglement()# lower entanglement = better read
+
+mantel_Global2 <- mantel(dist_Gower_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
+print(mantel_Global2)
+
+############# Global phylogeny-morphology codendrogram ########################
+dendlist(dendro_meta_phylo, dendro_Global_morpho)%>%
+  dendextend::untangle(method="ladderize")%>%
+  tanglegram(common_subtrees_color_lines = TRUE, 
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="Phylogeny",
+             main_right="Morphology",
+             hang=F)%>%
+  entanglement()# lower entanglement = better read
+
+mantel_Global3 <- mantel(dist_morpho_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
+print(mantel_Global3)
+
+############# Global guilds-morphology codendrogram (Bray-Curtis) ########################
+dendlist(dendro_meta_bray, dendro_Global_morpho)%>%
+  dendextend::untangle(method="ladderize")%>%
+  tanglegram(common_subtrees_color_lines = TRUE, 
+             highlight_distinct_edges  = FALSE,
+             highlight_branches_lwd=FALSE,
+             margin_inner=10,
+             margin_outer=7,
+             lwd=3,
+             main_left="Bray-Curtis guilds",
+             main_right="Morphology",
+             hang=F)%>%
+  entanglement()# lower entanglement = better read
+
+mantel_Global4 <- mantel(dist_morpho_Global, dist_Bray_Global, method = "spearman", permutations = 999)
+print(mantel_Global4)
+
+
+
+######################## Per-Continent Codendrograms ################################
+dendlist(dendro_Asia_phylo, dendro_Asia_bray)%>%
+  dendextend::untangle(method="ladderize")%>%
+  tanglegram(common_subtrees_color_lines = TRUE,
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
@@ -293,7 +441,7 @@ print(mantel_Australia)
 
 dendlist(dendro_Europe_phylo, dendro_Europe_bray)%>%
   dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+  tanglegram(common_subtrees_color_lines = TRUE, 
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
@@ -309,7 +457,7 @@ print(mantel_Europe)
 
 dendlist(dendro_North_America_phylo, dendro_North_America_bray)%>%
   dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+  tanglegram(common_subtrees_color_lines = TRUE, 
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
