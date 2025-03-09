@@ -11,6 +11,8 @@ library(RColorBrewer)
 library(factoextra)
 library(treemap)
 library(clootl)
+library(igraph)
+library(ggraph)
 
 # Set working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -62,7 +64,7 @@ morphology_Global<-morphology%>%
   inner_join(method_substrate_subset, by="Sp_eBird")%>%
   select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
          Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
-  mutate_at(2:8, log)
+  mutate_at(2:8, log10)
 
 morphology_Global_matrix <- morphology_Global%>%
   remove_rownames%>%
@@ -103,7 +105,7 @@ dendro_meta_bray <- dist_Bray_Global %>% # clustering using ward.D2
 
 ########## Gower distance calculation ################
 dist_Gower_Global <- matrix_meta_full%>%
-  vegdist(method = "altGower")
+  vegdist(method = "gower")
 dist_Gower_Global<-as.matrix(dist_Gower_Global)
 dist_Gower_Global<-as.dist(dist_Gower_Global[order(rownames(dist_Gower_Global)),order(colnames(dist_Gower_Global))])
 
@@ -334,8 +336,9 @@ dendro_North_America_morpho<-dist_morpho_North_America %>%
   hclust(method="ward.D2")%>%
   as.dendrogram()
 
-
-
+############### XXXXXXXXXXXXXXXXX ##########################
+############## Graphs ######################################
+############# XXXXXXXXXXXXXXXXXX ##########################
 ############# Global Co-dendrogram ####################
 set.seed(12345)
 dendlist(dendro_meta_phylo, dendro_meta_bray)%>%
@@ -351,8 +354,9 @@ dendlist(dendro_meta_phylo, dendro_meta_bray)%>%
              hang=F)%>%
   entanglement()# lower entanglement = better readability
 
-mantel_Global <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
-print(mantel_Global)
+mantel_Global_P_G1 <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
+print("Results of Mantel test between Bray-Curtis Guilds and Phylogeny")
+print(mantel_Global_P_G1)
 
 dendlist(dendro_meta_phylo, dendro_meta_gower)%>%
   dendextend::untangle(method="ladderize")%>%
@@ -367,8 +371,9 @@ dendlist(dendro_meta_phylo, dendro_meta_gower)%>%
              hang=F)%>%
   entanglement()# lower entanglement = better read
 
-mantel_Global2 <- mantel(dist_Gower_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
-print(mantel_Global2)
+mantel_Global_P_G2 <- mantel(dist_Gower_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
+print("Results of Mantel test between Gower Guilds and Phylogeny")
+print(mantel_Global_P_G2)
 
 ############# Global phylogeny-morphology codendrogram ########################
 dendlist(dendro_meta_phylo, dendro_Global_morpho)%>%
@@ -384,12 +389,13 @@ dendlist(dendro_meta_phylo, dendro_Global_morpho)%>%
              hang=F)%>%
   entanglement()# lower entanglement = better read
 
-mantel_Global3 <- mantel(dist_morpho_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
-print(mantel_Global3)
+mantel_Global_P_M <- mantel(dist_morpho_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
+print("Results of Mantel test between Morphology and Phylogeny")
+print(mantel_Global_P_M)
 
 ############# Global guilds-morphology codendrogram (Bray-Curtis) ########################
 dendlist(dendro_meta_bray, dendro_Global_morpho)%>%
-  dendextend::untangle(method="ladderize")%>%
+  dendextend::untangle(method="step2side")%>%
   tanglegram(common_subtrees_color_lines = TRUE, 
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
@@ -401,12 +407,18 @@ dendlist(dendro_meta_bray, dendro_Global_morpho)%>%
              hang=F)%>%
   entanglement()# lower entanglement = better read
 
-mantel_Global4 <- mantel(dist_morpho_Global, dist_Bray_Global, method = "spearman", permutations = 999)
-print(mantel_Global4)
+mantel_Global_M_G1 <- mantel(dist_morpho_Global, dist_Bray_Global, method = "spearman", permutations = 999)
+print("Results of Mantel test between Bray-Curtis Guilds and Morphology")
+print(mantel_Global_M_G1)
 
+
+mantel_Global_M_G2 <- mantel(dist_morpho_Global, dist_Gower_Global, method = "spearman", permutations = 999)
+print("Results of Mantel test between Gower Guilds and Morphology")
+print(mantel_Global_M_G2)
 
 
 ######################## Per-Continent Codendrograms ################################
+#### Asia
 dendlist(dendro_Asia_phylo, dendro_Asia_bray)%>%
   dendextend::untangle(method="ladderize")%>%
   tanglegram(common_subtrees_color_lines = TRUE,
@@ -419,13 +431,16 @@ dendlist(dendro_Asia_phylo, dendro_Asia_bray)%>%
              main_right="Bray-Curtis",
              main="Asia",
              hang=F)%>%
-  entanglement() # lower entanglement = better readability
-mantel_Asia <- mantel(dist_Bray_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
-print(mantel_Asia)
+  entanglement()
+mantel_Asia_P_G1 <- mantel(dist_Bray_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
+print(mantel_Asia_P_G1)
+mantel_Asia_P_M <- mantel(dist_morpho_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
+mantel_Asia_M_G1 <- mantel(dist_morpho_Asia, dist_Bray_Asia, method = "spearman", permutations = 999)
 
+#### Australia
 dendlist(dendro_Australia_phylo, dendro_Australia_bray)%>%
   dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+  tanglegram(common_subtrees_color_lines = TRUE, 
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
@@ -436,9 +451,12 @@ dendlist(dendro_Australia_phylo, dendro_Australia_bray)%>%
              main="Australia",
              hang=F)%>%
   entanglement() # lower entanglement = better readability
-mantel_Australia <- mantel(dist_Bray_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
-print(mantel_Australia)
+mantel_Australia_P_G1 <- mantel(dist_Bray_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
+print(mantel_Australia_P_G1)
+mantel_Australia_P_M <- mantel(dist_morpho_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
+mantel_Australia_M_G1 <- mantel(dist_morpho_Australia, dist_Bray_Australia, method = "spearman", permutations = 999)
 
+#### Europe
 dendlist(dendro_Europe_phylo, dendro_Europe_bray)%>%
   dendextend::untangle(method="ladderize")%>%
   tanglegram(common_subtrees_color_lines = TRUE, 
@@ -452,9 +470,12 @@ dendlist(dendro_Europe_phylo, dendro_Europe_bray)%>%
              main="Europe",
              hang=F)%>%
   entanglement() # lower entanglement = better readability
-mantel_Europe <- mantel(dist_Bray_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
-print(mantel_Europe)
+mantel_Europe_P_G1 <- mantel(dist_Bray_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
+print(mantel_Europe_P_G1)
+mantel_Europe_P_M <- mantel(dist_morpho_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
+mantel_Europe_M_G1 <- mantel(dist_morpho_Europe, dist_Bray_Europe, method = "spearman", permutations = 999)
 
+#### North America
 dendlist(dendro_North_America_phylo, dendro_North_America_bray)%>%
   dendextend::untangle(method="ladderize")%>%
   tanglegram(common_subtrees_color_lines = TRUE, 
@@ -468,5 +489,122 @@ dendlist(dendro_North_America_phylo, dendro_North_America_bray)%>%
              main="North_America",
              hang=F)%>%
   entanglement() # lower entanglement = better readability
-mantel_North_America <- mantel(dist_Bray_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
-print(mantel_North_America)
+mantel_North_America_P_G1 <- mantel(dist_Bray_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
+print(mantel_North_America_P_G1)
+mantel_North_America_P_M <- mantel(dist_morpho_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
+mantel_North_America_M_G1 <- mantel(dist_morpho_North_America, dist_Bray_North_America, method = "spearman", permutations = 999)
+
+############### Network graphs #########################
+
+###################### Global Mantel Graph ####################################
+nodes <- data.frame(
+  id = c("Phylogeny", "Morphology", "Guilds Bray"),
+  x = c(0, -0.5, 0.5),  # X-coordinates (adjust to keep symmetry)
+  y = c(0.5, -0.5, -0.5)  # Y-coordinates (equilateral triangle)
+)
+
+edges <- data.frame(
+  from = c("Phylogeny", "Morphology", "Guilds Bray"),
+  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  weight = c(mantel_Global_P_G1[["statistic"]], mantel_Global_P_M[["statistic"]], mantel_Global_M_G1[["statistic"]])
+)
+
+triangle_graph <- graph_from_data_frame(edges, vertices = nodes, directed = FALSE)
+
+ggraph(triangle_graph, layout = "manual", x = nodes$x, y = nodes$y) + 
+  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
+                 color = "darkkhaki", edge_alpha = 0.8, 
+                 label_size = 5, show.legend = FALSE) +
+  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
+  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
+  scale_edge_width(range = c(1, 10)) +
+  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
+  theme_void() +  # Remove background
+  ggtitle("Network of Correlations between Global Guilds, Phylogeny and Morphology")
+
+
+##################### Asia Mantel Graph #############################
+edges_Asia <- data.frame(
+  from = c("Phylogeny", "Morphology", "Guilds Bray"),
+  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  weight = c(mantel_Asia_P_G1[["statistic"]], mantel_Asia_P_M[["statistic"]], mantel_Asia_M_G1[["statistic"]])
+)
+
+triangle_graph_Asia <- graph_from_data_frame(edges_Asia, vertices = nodes, directed = FALSE)
+
+ggraph(triangle_graph_Asia, layout = "manual", x = nodes$x, y = nodes$y) + 
+  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
+                 color = "darkkhaki", edge_alpha = 0.8, 
+                 label_size = 5, show.legend = FALSE) +
+  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
+  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
+  scale_edge_width(range = c(1, 10)) +
+  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
+  theme_void() +  # Remove background
+  ggtitle("Asia")
+
+######################## Australia Mantel Graph #############################
+
+edges_Australia <- data.frame(
+  from = c("Phylogeny", "Morphology", "Guilds Bray"),
+  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  weight = c(mantel_Australia_P_G1[["statistic"]], mantel_Australia_P_M[["statistic"]], mantel_Australia_M_G1[["statistic"]])
+)
+
+triangle_graph_Australia <- graph_from_data_frame(edges_Australia, vertices = nodes, directed = FALSE)
+
+ggraph(triangle_graph_Australia, layout = "manual", x = nodes$x, y = nodes$y) + 
+  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
+                 color = "darkkhaki", edge_alpha = 0.8, 
+                 label_size = 5, show.legend = FALSE) +
+  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
+  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
+  scale_edge_width(range = c(1, 10)) +
+  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
+  theme_void() +  # Remove background
+  ggtitle("Australia")
+
+#################### Europe Mantel Graph #############################
+
+edges_Europe <- data.frame(
+  from = c("Phylogeny", "Morphology", "Guilds Bray"),
+  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  weight = c(mantel_Europe_P_G1[["statistic"]], mantel_Europe_P_M[["statistic"]], mantel_Europe_M_G1[["statistic"]])
+)
+
+triangle_graph_Europe <- graph_from_data_frame(edges_Europe, vertices = nodes, directed = FALSE)
+
+ggraph(triangle_graph_Europe, layout = "manual", x = nodes$x, y = nodes$y) + 
+  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
+                 color = "darkkhaki", edge_alpha = 0.8, 
+                 label_size = 5, show.legend = FALSE) +
+  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
+  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
+  scale_edge_width(range = c(1, 10)) +
+  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
+  theme_void() +  # Remove background
+  ggtitle("Europe")
+
+####################### North America Mantel Graph ############################
+
+edges_North_America <- data.frame(
+  from = c("Phylogeny", "Morphology", "Guilds Bray"),
+  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  weight = c(mantel_North_America_P_G1[["statistic"]], mantel_North_America_P_M[["statistic"]], mantel_North_America_M_G1[["statistic"]])
+)
+
+triangle_graph_North_America <- graph_from_data_frame(edges_North_America, vertices = nodes, directed = FALSE)
+
+ggraph(triangle_graph_North_America, layout = "manual", x = nodes$x, y = nodes$y) + 
+  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
+                 color = "darkkhaki", edge_alpha = 0.8, 
+                 label_size = 5, show.legend = FALSE) +
+  geom_node_point(size = 40, color = "cyan4") +  # Node size
+  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
+  scale_edge_width(range = c(1, 10)) +
+  xlim(-1, 1) + ylim(-1, 1) + 
+  theme_void() +
+  ggtitle("North_America")
+
+##################################### Guild visualization Global #######################################################
+
