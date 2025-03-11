@@ -11,8 +11,11 @@ library(RColorBrewer)
 library(factoextra)
 library(treemap)
 library(clootl)
-library(igraph)
 library(ggraph)
+library(igraph)
+library(phylobase)
+library(phylosignal)
+library(adephylo)
 
 # Set working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -92,6 +95,72 @@ matrix_meta_full <- method_substrate_subset%>%
   select(-c(N_BEH,N_SUB))%>%
   remove_rownames%>%
   column_to_rownames(var="Sp_eBird")
+
+behavior_columns <- colnames(matrix_meta_full)[1:6]
+substrate_columns <- colnames(matrix_meta_full)[7:11]
+
+matrix_Global_prop <- matrix_meta_full %>%
+  mutate(
+    behavior_sum = rowSums(across(all_of(behavior_columns))),
+    substrate_sum = rowSums(across(all_of(substrate_columns)))
+  ) %>%
+  mutate(across(all_of(behavior_columns), ~ ifelse(behavior_sum == 0, 0, . / behavior_sum))) %>%
+  mutate(across(all_of(substrate_columns), ~ ifelse(substrate_sum == 0, 0, . / substrate_sum))) %>%
+  select(-behavior_sum, -substrate_sum)
+
+
+matrix_Asia_prop <- method_substrate_continents%>%
+  filter(continent=="Asia")%>%
+  select(-c(N_BEH,N_SUB))%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")%>%
+  mutate(
+    behavior_sum = rowSums(across(all_of(behavior_columns))),
+    substrate_sum = rowSums(across(all_of(substrate_columns)))
+  ) %>%
+  mutate(across(all_of(behavior_columns), ~ ifelse(behavior_sum == 0, 0, . / behavior_sum))) %>%
+  mutate(across(all_of(substrate_columns), ~ ifelse(substrate_sum == 0, 0, . / substrate_sum))) %>%
+  select(-behavior_sum, -substrate_sum,-continent)
+
+matrix_Australia_prop <-method_substrate_continents%>%
+  filter(continent=="Australia")%>%
+  select(-c(N_BEH,N_SUB))%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")%>%
+  mutate(
+    behavior_sum = rowSums(across(all_of(behavior_columns))),
+    substrate_sum = rowSums(across(all_of(substrate_columns)))
+  ) %>%
+  mutate(across(all_of(behavior_columns), ~ ifelse(behavior_sum == 0, 0, . / behavior_sum))) %>%
+  mutate(across(all_of(substrate_columns), ~ ifelse(substrate_sum == 0, 0, . / substrate_sum))) %>%
+  select(-behavior_sum, -substrate_sum,-continent)
+  
+matrix_Europe_prop <-method_substrate_continents%>%
+  filter(continent=="Europe")%>%
+  select(-c(N_BEH,N_SUB))%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")%>%
+  mutate(
+    behavior_sum = rowSums(across(all_of(behavior_columns))),
+    substrate_sum = rowSums(across(all_of(substrate_columns)))
+  ) %>%
+  mutate(across(all_of(behavior_columns), ~ ifelse(behavior_sum == 0, 0, . / behavior_sum))) %>%
+  mutate(across(all_of(substrate_columns), ~ ifelse(substrate_sum == 0, 0, . / substrate_sum))) %>%
+  select(-behavior_sum, -substrate_sum,-continent)
+
+matrix_North_America_prop <-method_substrate_continents%>%
+  filter(continent=="North_America")%>%
+  select(-c(N_BEH,N_SUB))%>%
+  remove_rownames%>%
+  column_to_rownames(var="Sp_eBird")%>%
+  mutate(
+    behavior_sum = rowSums(across(all_of(behavior_columns))),
+    substrate_sum = rowSums(across(all_of(substrate_columns)))
+  ) %>%
+  mutate(across(all_of(behavior_columns), ~ ifelse(behavior_sum == 0, 0, . / behavior_sum))) %>%
+  mutate(across(all_of(substrate_columns), ~ ifelse(substrate_sum == 0, 0, . / substrate_sum))) %>%
+  select(-behavior_sum, -substrate_sum,-continent)
+
 
 ############## Bray-Curtis dissimilarity calculation ##################
 dist_Bray_Global <- matrix_meta_full%>%
@@ -252,7 +321,7 @@ morphology_Asia<-morphology%>%
   filter(Sp_eBird %in% sp_Asia)%>%
   select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
          Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
-  mutate_at(2:8, log)
+  mutate_at(2:8, log10)
 
 morphology_Asia_matrix <- morphology_Asia%>%
   remove_rownames%>%
@@ -273,7 +342,7 @@ morphology_Australia<-morphology%>%
   filter(Sp_eBird %in% sp_Australia)%>%
   select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
          Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
-  mutate_at(2:8, log)
+  mutate_at(2:8, log10)
 
 morphology_Australia_matrix <- morphology_Australia%>%
   remove_rownames%>%
@@ -295,7 +364,7 @@ morphology_Europe<-morphology%>%
   filter(Sp_eBird %in% sp_Europe)%>%
   select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
          Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
-  mutate_at(2:8, log)
+  mutate_at(2:8, log10)
 
 morphology_Europe_matrix <- morphology_Europe%>%
   remove_rownames%>%
@@ -319,7 +388,7 @@ morphology_North_America<-morphology%>%
   filter(Sp_eBird %in% sp_North_America)%>%
   select(Sp_eBird,Beak.Length_Culmen, Beak.Width, 
          Beak.Depth,Tarsus.Length, Wing.Length, `Hand-Wing.Index`, Tail.Length)%>%
-  mutate_at(2:8, log)
+  mutate_at(2:8, log10)
 
 morphology_North_America_matrix <- morphology_North_America%>%
   remove_rownames%>%
@@ -503,15 +572,39 @@ nodes <- data.frame(
   y = c(0.5, -0.5, -0.5)  # Y-coordinates (equilateral triangle)
 )
 
+nodes2 <- data.frame(
+  id = c("Phylogeny", "Morphology", "Guilds Gower"),
+  x = c(0, -0.5, 0.5),  # X-coordinates (adjust to keep symmetry)
+  y = c(0.5, -0.5, -0.5)  # Y-coordinates (equilateral triangle)
+)
+
 edges <- data.frame(
   from = c("Phylogeny", "Morphology", "Guilds Bray"),
   to = c("Guilds Bray", "Phylogeny", "Morphology"),
   weight = c(mantel_Global_P_G1[["statistic"]], mantel_Global_P_M[["statistic"]], mantel_Global_M_G1[["statistic"]])
 )
 
-triangle_graph <- graph_from_data_frame(edges, vertices = nodes, directed = FALSE)
+edges2 <- data.frame(
+  from = c("Phylogeny", "Morphology", "Guilds Gower"),
+  to = c("Guilds Gower", "Phylogeny", "Morphology"),
+  weight = c(mantel_Global_P_G2[["statistic"]], mantel_Global_P_M[["statistic"]], mantel_Global_M_G2[["statistic"]])
+)
 
-ggraph(triangle_graph, layout = "manual", x = nodes$x, y = nodes$y) + 
+triangle_graph_Global1 <- graph_from_data_frame(edges, vertices = nodes, directed = FALSE)
+triangle_graph_Global2 <- graph_from_data_frame(edges2, vertices = nodes2, directed = FALSE)
+
+ggraph(triangle_graph_Global1, layout = "manual", x = nodes$x, y = nodes$y) + 
+  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
+                 color = "darkkhaki", edge_alpha = 0.8, 
+                 label_size = 5, show.legend = FALSE) +
+  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
+  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
+  scale_edge_width(range = c(1, 10)) +
+  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
+  theme_void() +  # Remove background
+  ggtitle("Network of Correlations between Global Guilds, Phylogeny and Morphology")
+
+ggraph(triangle_graph_Global2, layout = "manual", x = nodes$x, y = nodes$y) + 
   geom_edge_link(aes(width = weight, label = round(weight, 3)), 
                  color = "darkkhaki", edge_alpha = 0.8, 
                  label_size = 5, show.legend = FALSE) +
@@ -607,4 +700,38 @@ ggraph(triangle_graph_North_America, layout = "manual", x = nodes$x, y = nodes$y
   ggtitle("North_America")
 
 ##################################### Guild visualization Global #######################################################
+
+bray_tree_Global  <- as.phylo(dendro_meta_bray)
+bray_tree_Asia  <- as.phylo(dendro_Asia_bray)
+bray_tree_Australia  <- as.phylo(dendro_Australia_bray)
+bray_tree_Europe  <- as.phylo(dendro_Europe_bray)
+bray_tree_North_America  <- as.phylo(dendro_North_America_bray)
+
+trait_labels<-c("Flycatch", "Glean", "Hover", "Pounce", "Probe", "Snatch", "Air", "Bark", "Flower", "Ground", "Leaf")
+
+
+
+traits_Global <- phylo4d( x=bray_tree_Global, tip.data=matrix_Global_prop )
+traits_Asia <- phylo4d( x=bray_tree_Asia, tip.data=matrix_Asia_prop )
+traits_Australia <- phylo4d( x=bray_tree_Australia, tip.data=matrix_Australia_prop )
+traits_Europe <- phylo4d( x=bray_tree_Europe, tip.data=matrix_Europe_prop )
+traits_North_America <- phylo4d( x=bray_tree_North_America, tip.data=matrix_North_America_prop )
+
+
+par(oma=c(6,2,2,0))
+table.phylo4d( traits_Global, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels )
+
+gridplot.phylo4d(traits_Global, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Global", cex.main=1.2, cell.col = white2red(200))
+
+################## Per-Continent Guild visualization ############################
+gridplot.phylo4d(traits_Asia, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Asia", cex.main=1.2, cell.col = white2red(200))
+
+gridplot.phylo4d(traits_Australia, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Australia", cex.main=1.2, cell.col = white2red(200))
+
+gridplot.phylo4d(traits_Europe, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Europe", cex.main=1.2, cell.col = white2red(200))
+
+gridplot.phylo4d(traits_North_America, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds North America", cex.main=1.2, cell.col = white2red(200))
+
+
+
 
