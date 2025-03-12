@@ -56,7 +56,7 @@ method_substrate_continents<-method_substrate_meta%>%
 sp<-method_substrate_subset%>%
   pull(Sp_eBird)
 
-phylo_meta <- extractTree(species=sp, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_meta <- clootl::extractTree(species=sp, output.type="scientific", taxonomy.year=2021, version="current")
 
 
 ########################## Morphology #################
@@ -274,10 +274,10 @@ dendro_North_America_bray <- dist_Bray_North_America%>%
 
 ############### Phylogeny per continents ##################
 # load phylogeny for each continent
-phylo_Asia <- extractTree(species=sp_Asia, output.type="scientific", taxonomy.year=2021, version="current")
-phylo_Australia <- extractTree(species=sp_Australia, output.type="scientific", taxonomy.year=2021, version="current")
-phylo_Europe <- extractTree(species=sp_Europe, output.type="scientific", taxonomy.year=2021, version="current")
-phylo_North_America <- extractTree(species=sp_North_America, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_Asia <- clootl::extractTree(species=sp_Asia, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_Australia <- clootl::extractTree(species=sp_Australia, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_Europe <- clootl::extractTree(species=sp_Europe, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_North_America <- clootl::extractTree(species=sp_North_America, output.type="scientific", taxonomy.year=2021, version="current")
 
 #matrix for mantel
 phylo_Asia_mantel <- as.dist(
@@ -719,7 +719,10 @@ traits_North_America <- phylo4d( x=bray_tree_North_America, tip.data=matrix_Nort
 
 
 par(oma=c(6,2,2,0))
-table.phylo4d( traits_Global, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels )
+table.phylo4d( traits_Global, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds Global")
+
+table.phylo4d( traits_Asia, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds Asia")
+
 
 gridplot.phylo4d(traits_Global, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Global", cex.main=1.2, cell.col = white2red(200))
 
