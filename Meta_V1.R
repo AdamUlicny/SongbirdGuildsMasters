@@ -408,46 +408,64 @@ dendro_North_America_morpho<-dist_morpho_North_America %>%
 ############### XXXXXXXXXXXXXXXXX ##########################
 ############## Graphs ######################################
 ############# XXXXXXXXXXXXXXXXXX ##########################
+########### Coloring Guilds ##############################
+passeriformes_meta <- method_substrate_meta %>%
+  filter(Order == "PASSERIFORMES") %>%
+  select(Sp_eBird, continent) %>%
+  group_by(Sp_eBird) %>%
+  summarize(continent = ifelse(n_distinct(continent) > 1, "Multiple", first(continent)))  # Mark multiple-continent species
+species_to_continent <- setNames(passeriformes_meta$continent, passeriformes_meta$Sp_eBird)
+continent_colors <- c("North America" = "blue",
+                      "South America" = "green",
+                      "Europe" = "red",
+                      "Africa" = "purple",
+                      "Asia" = "orange",
+                      "Australia" = "yellow",
+                      "Multiple" = "black") 
+
+
+
 ############# Global Co-dendrogram ####################
 set.seed(12345)
-dendlist(dendro_meta_phylo, dendro_meta_bray)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
+
+
+dendro_meta_phylo<-ladderize(dendro_meta_phylo)
+# ladderized phylogeny (ape)
+
+
+dendro_meta_bray_step1side<-untangle(dendro_meta_bray, dendro_meta_phylo, method = "step1side")
+# first dendrogram is untangled, second dendrogram is fixed
+
+# these 2 steps allows us to plot ladderized phylogeny on the right and untangled dendrogram on the left
+# without this workflow, we could still do ladderization+step1side, but the phylogeny would be on the left
+
+tangle_global_P_G<-tanglegram(dendro_meta_phylo,dendro_meta_bray_step1side[[1]],
+           common_subtrees_color_lines = TRUE,
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
-             margin_inner=10,
+             margin_inner=12.5,
              margin_outer=7,
              lwd=3,
+           columns_width=c(5,2,5),
              main_left="Phylogeny",
              main_right="Bray-Curtis",
              hang=F)%>%
   entanglement()# lower entanglement = better readability
 
+
 mantel_Global_P_G1 <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
 print("Results of Mantel test between Bray-Curtis Guilds and Phylogeny")
 print(mantel_Global_P_G1)
 
-dendlist(dendro_meta_phylo, dendro_meta_gower)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, 
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="Phylogeny",
-             main_right="Gower",
-             hang=F)%>%
-  entanglement()# lower entanglement = better read
 
-mantel_Global_P_G2 <- mantel(dist_Gower_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
-print("Results of Mantel test between Gower Guilds and Phylogeny")
-print(mantel_Global_P_G2)
 
 ############# Global phylogeny-morphology codendrogram ########################
-dendlist(dendro_meta_phylo, dendro_Global_morpho)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, 
+dendro_Global_morpho_step1side<-untangle(dendro_Global_morpho, dendro_meta_phylo, method = "step1side")
+# second dendrogram is fixed
+# this steps allows us to plot ladderized phylogeny and untangled left dendrogram 
+
+tanglegram(dendro_meta_phylo, dendro_Global_morpho_step1side[[1]],
+             common_subtrees_color_lines = TRUE, 
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
@@ -456,7 +474,7 @@ dendlist(dendro_meta_phylo, dendro_Global_morpho)%>%
              main_left="Phylogeny",
              main_right="Morphology",
              hang=F)%>%
-  entanglement()# lower entanglement = better read
+  entanglement()# lower entanglement = better readability
 
 mantel_Global_P_M <- mantel(dist_morpho_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
 print("Results of Mantel test between Morphology and Phylogeny")
@@ -464,7 +482,7 @@ print(mantel_Global_P_M)
 
 ############# Global guilds-morphology codendrogram (Bray-Curtis) ########################
 dendlist(dendro_meta_bray, dendro_Global_morpho)%>%
-  dendextend::untangle(method="step2side")%>%
+  dendextend::untangle(method="step2side")%>%# untangles both sides for best readability
   tanglegram(common_subtrees_color_lines = TRUE, 
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
@@ -474,7 +492,7 @@ dendlist(dendro_meta_bray, dendro_Global_morpho)%>%
              main_left="Bray-Curtis guilds",
              main_right="Morphology",
              hang=F)%>%
-  entanglement()# lower entanglement = better read
+  entanglement()# lower entanglement = better readability
 
 mantel_Global_M_G1 <- mantel(dist_morpho_Global, dist_Bray_Global, method = "spearman", permutations = 999)
 print("Results of Mantel test between Bray-Curtis Guilds and Morphology")
@@ -487,19 +505,37 @@ print(mantel_Global_M_G2)
 
 
 ######################## Per-Continent Codendrograms ################################
+# prepare the dendrograms
+dendro_Asia_phylo<-ladderize(dendro_Asia_phylo)# ladderized phylogeny (ape)
+dendro_Asia_bray_step1side<-untangle(dendro_Asia_bray, dendro_Asia_phylo, method = "step1side")# untangle bray guilds
+dendro_Asia_morpho_step1side<-untangle(dendro_Asia_morpho, dendro_Asia_phylo, method = "step1side")# untangle morphology
+
+dendro_Australia_phylo<-ladderize(dendro_Australia_phylo)# ladderized phylogeny (ape)
+dendro_Australia_bray_step1side<-untangle(dendro_Australia_bray, dendro_Australia_phylo, method = "step1side")# untangle bray guilds
+dendro_Australia_morpho_step1side<-untangle(dendro_Australia_morpho, dendro_Australia_phylo, method = "step1side")# untangle morphology
+
+dendro_Europe_phylo<-ladderize(dendro_Europe_phylo)# ladderized phylogeny (ape)
+dendro_Europe_bray_step1side<-untangle(dendro_Europe_bray, dendro_Europe_phylo, method = "step1side")# untangle bray guilds
+dendro_Europe_morpho_step1side<-untangle(dendro_Europe_morpho, dendro_Europe_phylo, method = "step1side")# untangle
+
+dendro_North_America_phylo<-ladderize(dendro_North_America_phylo)# ladderized phylogeny (ape)
+dendro_North_America_bray_step1side<-untangle(dendro_North_America_bray, dendro_North_America_phylo, method = "step1side")# untangle bray guilds
+dendro_North_America_morpho_step1side<-untangle(dendro_North_America_morpho, dendro_North_America_phylo, method = "step1side")# untangle morphology
+
 #### Asia
-dendlist(dendro_Asia_phylo, dendro_Asia_bray)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE,
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="phylogeny",
-             main_right="Bray-Curtis",
-             main="Asia",
-             hang=F)%>%
+tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
+           common_subtrees_color_lines = TRUE,
+           center=T,
+           highlight_distinct_edges = FALSE,
+           highlight_branches_lwd=FALSE,
+           margin_inner=12.5,
+           margin_outer=5,
+           columns_width=c(5,1,5),
+           lwd=2.5,
+           main_left="Phylogeny",
+           main_right="Bray-Curtis",
+           main="Asia",
+           hang=F)%>%
   entanglement()
 mantel_Asia_P_G1 <- mantel(dist_Bray_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
 print(mantel_Asia_P_G1)
@@ -507,18 +543,19 @@ mantel_Asia_P_M <- mantel(dist_morpho_Asia, phylo_Asia_mantel, method = "spearma
 mantel_Asia_M_G1 <- mantel(dist_morpho_Asia, dist_Bray_Asia, method = "spearman", permutations = 999)
 
 #### Australia
-dendlist(dendro_Australia_phylo, dendro_Australia_bray)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, 
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="phylogeny",
-             main_right="Bray-Curtis",
-             main="Australia",
-             hang=F)%>%
+tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
+           common_subtrees_color_lines = TRUE,
+           center=T,
+           highlight_distinct_edges = FALSE,
+           highlight_branches_lwd=FALSE,
+           margin_inner=12.5,
+           margin_outer=5,
+           columns_width=c(5,1,5),
+           lwd=2.5,
+           main_left="Phylogeny",
+           main_right="Bray-Curtis",
+           main="Asia",
+           hang=F)%>%
   entanglement() # lower entanglement = better readability
 mantel_Australia_P_G1 <- mantel(dist_Bray_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
 print(mantel_Australia_P_G1)
@@ -526,37 +563,39 @@ mantel_Australia_P_M <- mantel(dist_morpho_Australia, phylo_Australia_mantel, me
 mantel_Australia_M_G1 <- mantel(dist_morpho_Australia, dist_Bray_Australia, method = "spearman", permutations = 999)
 
 #### Europe
-dendlist(dendro_Europe_phylo, dendro_Europe_bray)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, 
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="phylogeny",
-             main_right="Bray-Curtis",
-             main="Europe",
-             hang=F)%>%
-  entanglement() # lower entanglement = better readability
+tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
+           common_subtrees_color_lines = TRUE,
+           center=T,
+           highlight_distinct_edges = FALSE,
+           highlight_branches_lwd=FALSE,
+           margin_inner=12.5,
+           margin_outer=5,
+           columns_width=c(5,1,5),
+           lwd=2.5,
+           main_left="Phylogeny",
+           main_right="Bray-Curtis",
+           main="Asia",
+           hang=F)%>%
+  entanglement()# lower entanglement = better readability
 mantel_Europe_P_G1 <- mantel(dist_Bray_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
 print(mantel_Europe_P_G1)
 mantel_Europe_P_M <- mantel(dist_morpho_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
 mantel_Europe_M_G1 <- mantel(dist_morpho_Europe, dist_Bray_Europe, method = "spearman", permutations = 999)
 
 #### North America
-dendlist(dendro_North_America_phylo, dendro_North_America_bray)%>%
-  dendextend::untangle(method="ladderize")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, 
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="phylogeny",
-             main_right="Bray-Curtis",
-             main="North_America",
-             hang=F)%>%
+tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
+           common_subtrees_color_lines = TRUE,
+           center=T,
+           highlight_distinct_edges = FALSE,
+           highlight_branches_lwd=FALSE,
+           margin_inner=12.5,
+           margin_outer=5,
+           columns_width=c(5,1,5),
+           lwd=2.5,
+           main_left="Phylogeny",
+           main_right="Bray-Curtis",
+           main="Asia",
+           hang=F)%>%
   entanglement() # lower entanglement = better readability
 mantel_North_America_P_G1 <- mantel(dist_Bray_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
 print(mantel_North_America_P_G1)
@@ -673,7 +712,7 @@ ggraph(triangle_graph_Europe, layout = "manual", x = nodes$x, y = nodes$y) +
                  label_size = 5, show.legend = FALSE) +
   geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
   geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  scale_edge_width(range = c(1, 10)) +
+  scale_edge_width(range = c(1, 20)) +
   xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
   theme_void() +  # Remove background
   ggtitle("Europe")
