@@ -415,13 +415,16 @@ passeriformes_meta <- method_substrate_meta %>%
   group_by(Sp_eBird) %>%
   summarize(continent = ifelse(n_distinct(continent) > 1, "Multiple", first(continent)))  # Mark multiple-continent species
 species_to_continent <- setNames(passeriformes_meta$continent, passeriformes_meta$Sp_eBird)
-continent_colors <- c("North America" = "blue",
-                      "South America" = "green",
-                      "Europe" = "red",
-                      "Africa" = "purple",
-                      "Asia" = "orange",
-                      "Australia" = "yellow",
-                      "Multiple" = "black") 
+continent_colors<-c("North_America" = "darkblue",
+                    "Europe" = "darkgreen",
+                    "Asia" = "darkred",
+                    "Australia" = "orange",
+                    "Multiple" = "black")
+
+# Vector colorCodes where each species from species_to_continent is assigned a color from continent_colors
+colorCodes <- sapply(species_to_continent, function(x) continent_colors[x])
+# remove .Asia etc
+names(colorCodes) <- gsub("\\..*", "", names(colorCodes))
 
 
 
@@ -429,22 +432,39 @@ continent_colors <- c("North America" = "blue",
 set.seed(12345)
 
 
-dendro_meta_phylo<-ladderize(dendro_meta_phylo)
-# ladderized phylogeny (ape)
+dendro_meta_phylo<-ladderize(dendro_meta_phylo)# ladderized phylogeny (ape)
+dendro_meta_bray<-untangle(dendro_meta_bray, dendro_meta_phylo, method = "step1side")# first dendrogram is untangled, second dendrogram is fixed. Produces
+dendro_meta_bray<-dendro_meta_bray[[1]]# saving untangled dendrogram back to dend object from dendlist
 
+# extract labels/leaves from dendrogram
+labels_phylo_Global<-dendro_meta_phylo%>%labels%>%rev()
+labels_phylo_Global<-colorCodes[labels_phylo_Global]# assign colors to labels
 
-dendro_meta_bray_step1side<-untangle(dendro_meta_bray, dendro_meta_phylo, method = "step1side")
-# first dendrogram is untangled, second dendrogram is fixed
+labels_bray_Global<-dendro_meta_bray%>%labels%>%rev()
+labels_bray_Global<-colorCodes[labels_bray_Global]# assign colors to labels
 
-# these 2 steps allows us to plot ladderized phylogeny on the right and untangled dendrogram on the left
+labels_colors(dendro_meta_phylo) <- colorCodes[labels(dendro_meta_phylo)][order.dendrogram(dendro_meta_phylo)]
+labels_colors(dendro_meta_bray) <- colorCodes[labels(dendro_meta_bray)][order.dendrogram(dendro_meta_bray)]
+
+ordered_labels_phylo <- labels(dendro_meta_phylo)[order.dendrogram(dendro_meta_phylo)]
+labels_colors_phylo<-colorCodes[ordered_labels_phylo]
+data.frame(Species = ordered_labels_phylo, Color = labels_colors_phylo)
+
+labels_colors(dendro_meta_phylo)<-labels_colors_phylo
+labels_colors(dendro_meta_bray)<-labels_bray_Global
+colorCodes[groupCodes][order.dendrogram(dend)]
+# these 2 steps allows us to plot# these 2 steps allows us to plot ladderized phylogeny on the right and untangled dendrogram on the left
 # without this workflow, we could still do ladderization+step1side, but the phylogeny would be on the left
 
-tangle_global_P_G<-tanglegram(dendro_meta_phylo,dendro_meta_bray_step1side[[1]],
+
+plot(dendro_meta_phylo, horiz=T)
+
+tanglegram(dendro_meta_phylo,dendro_meta_bray,
            common_subtrees_color_lines = TRUE,
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=12.5,
-             margin_outer=7,
+             margin_outer=3,
              lwd=3,
            columns_width=c(5,2,5),
              main_left="Phylogeny",
@@ -487,7 +507,7 @@ dendlist(dendro_meta_bray, dendro_Global_morpho)%>%
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=10,
-             margin_outer=7,
+             margin_outer=,
              lwd=3,
              main_left="Bray-Curtis guilds",
              main_right="Morphology",
@@ -529,7 +549,7 @@ tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            highlight_distinct_edges = FALSE,
            highlight_branches_lwd=FALSE,
            margin_inner=12.5,
-           margin_outer=5,
+           margin_outer=3,
            columns_width=c(5,1,5),
            lwd=2.5,
            main_left="Phylogeny",
@@ -623,14 +643,7 @@ edges <- data.frame(
   weight = c(mantel_Global_P_G1[["statistic"]], mantel_Global_P_M[["statistic"]], mantel_Global_M_G1[["statistic"]])
 )
 
-edges2 <- data.frame(
-  from = c("Phylogeny", "Morphology", "Guilds Gower"),
-  to = c("Guilds Gower", "Phylogeny", "Morphology"),
-  weight = c(mantel_Global_P_G2[["statistic"]], mantel_Global_P_M[["statistic"]], mantel_Global_M_G2[["statistic"]])
-)
-
 triangle_graph_Global1 <- graph_from_data_frame(edges, vertices = nodes, directed = FALSE)
-triangle_graph_Global2 <- graph_from_data_frame(edges2, vertices = nodes2, directed = FALSE)
 
 ggraph(triangle_graph_Global1, layout = "manual", x = nodes$x, y = nodes$y) + 
   geom_edge_link(aes(width = weight, label = round(weight, 3)), 
@@ -638,21 +651,11 @@ ggraph(triangle_graph_Global1, layout = "manual", x = nodes$x, y = nodes$y) +
                  label_size = 5, show.legend = FALSE) +
   geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
   geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  scale_edge_width(range = c(1, 10)) +
   xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
   theme_void() +  # Remove background
   ggtitle("Network of Correlations between Global Guilds, Phylogeny and Morphology")
 
-ggraph(triangle_graph_Global2, layout = "manual", x = nodes$x, y = nodes$y) + 
-  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
-                 color = "darkkhaki", edge_alpha = 0.8, 
-                 label_size = 5, show.legend = FALSE) +
-  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
-  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  scale_edge_width(range = c(1, 10)) +
-  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
-  theme_void() +  # Remove background
-  ggtitle("Network of Correlations between Global Guilds, Phylogeny and Morphology")
+
 
 
 ##################### Asia Mantel Graph #############################
@@ -670,8 +673,7 @@ ggraph(triangle_graph_Asia, layout = "manual", x = nodes$x, y = nodes$y) +
                  label_size = 5, show.legend = FALSE) +
   geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
   geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  scale_edge_width(range = c(1, 10)) +
-  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
+  xlim(-1, 1) + ylim(-1, 1) +
   theme_void() +  # Remove background
   ggtitle("Asia")
 

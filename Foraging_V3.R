@@ -11,16 +11,19 @@ library(factoextra)
 library(treemap)
 library(patchwork)
 library(gridExtra)
+library(clootl)
 
 ################################### Load data ###########################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-data_23 <- read_excel("./data/behav_data_23.xlsx")
-data_24 <- read_excel("./data/behav_data_24.xlsx")
+#data_23 <- read_excel("./data/behav_data_23.xlsx")
+#data_24 <- read_excel("./data/behav_data_24.xlsx")
 data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
-phylo_cz <- "./resources/phylo/phylo_cz_v1/output.nex"
-phylo_cz <- ape::read.nexus(phylo_cz)
-phylo_meta <- "./resources/phylo/phylo_meta_v1/output.nex"
-phylo_meta <- ape::read.nexus(phylo_meta)
+#phylo_cz <- "./resources/phylo/phylo_cz_v1/output.nex"
+#phylo_cz <- ape::read.nexus(phylo_cz)
+method_substrate_cz <- read.csv("data/method_substrate_meta.csv")%>%
+  filter(location=="Czech Republic")
+sp_cz<-method_substrate_cz$Sp_eBird
+phylo_cz<-clootl::extractTree(species=sp, output.type="scientific", taxonomy.year=2021, version="current")
 ################################### Data preparation#####################
 # in data bodovka unite columns genus and species, separator _, name sp_orig
 data_bodovka <- data_bodovka %>%
