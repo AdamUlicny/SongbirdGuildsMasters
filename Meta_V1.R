@@ -435,9 +435,12 @@ set.seed(12345)
 dendro_meta_phylo<-ladderize(dendro_meta_phylo)# ladderized phylogeny (ape)
 dendro_meta_bray<-untangle(dendro_meta_bray, dendro_meta_phylo, method = "step1side")# first dendrogram is untangled, second dendrogram is fixed. Produces
 dendro_meta_bray<-dendro_meta_bray[[1]]# saving untangled dendrogram back to dend object from dendlist
+# these 2 steps allows us to plot ladderized phylogeny on the right and untangled dendrogram on the left
+# without this workflow, we could still do ladderization+step1side, but the phylogeny would be on the left
+
 
 # extract labels/leaves from dendrogram
-labels_phylo_Global<-dendro_meta_phylo%>%labels%>%rev()
+labels_phylo_Global<-order.dendrogram(dendro_meta_phylo)
 labels_phylo_Global<-colorCodes[labels_phylo_Global]# assign colors to labels
 
 labels_bray_Global<-dendro_meta_bray%>%labels%>%rev()
@@ -450,11 +453,10 @@ ordered_labels_phylo <- labels(dendro_meta_phylo)[order.dendrogram(dendro_meta_p
 labels_colors_phylo<-colorCodes[ordered_labels_phylo]
 data.frame(Species = ordered_labels_phylo, Color = labels_colors_phylo)
 
-labels_colors(dendro_meta_phylo)<-labels_colors_phylo
+labels_colors(dendro_meta_phylo)<-labels_phylo_Global
 labels_colors(dendro_meta_bray)<-labels_bray_Global
 colorCodes[groupCodes][order.dendrogram(dend)]
-# these 2 steps allows us to plot# these 2 steps allows us to plot ladderized phylogeny on the right and untangled dendrogram on the left
-# without this workflow, we could still do ladderization+step1side, but the phylogeny would be on the left
+
 
 
 plot(dendro_meta_phylo, horiz=T)

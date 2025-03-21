@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1" creator="https://mapy.cz/">
+	<trk>
+		<name>Mapovačka 23</name>
+		<trkseg>
+			<trkpt lat="49.937578" lon="14.117713">
+				<ele>366.427521</ele>
+			</trkpt>
+			<trkpt lat="49.936549" lon="14.117027">
+				<ele>372.997894</ele>
+			</trkpt>
+			<trkpt lat="49.935872" lon="14.115632">
+				<ele>377.306732</ele>
+			</trkpt>
+			<trkpt lat="49.935465" lon="14.114001">
+				<ele>375.163147</ele>
+			</trkpt>
+			<trkpt lat="49.935465" lon="14.112242">
+				<ele>374.988403</ele>
+			</trkpt>
+			<trkpt lat="49.935458" lon="14.110493">
+				<ele>377.273956</ele>
+			</trkpt>
+			<trkpt lat="49.934360" lon="14.110064">
+				<ele>368.351593</ele>
+			</trkpt>
+			<trkpt lat="49.933262" lon="14.110450">
+				<ele>347.135162</ele>
+			</trkpt>
+			<trkpt lat="49.932516" lon="14.111748">
+				<ele>327.131012</ele>
+			</trkpt>
+		</trkseg>
+	</trk>
+</gpx>
+
