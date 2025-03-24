@@ -11,6 +11,9 @@ library(factoextra)
 library(treemap)
 library(patchwork)
 library(gridExtra)
+library(igraph)
+library(ggraph)
+library(ggalluvial)
 
 ################################### Load data ###########################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -19,12 +22,15 @@ data_24 <- read_excel("./data/behav_data_24.xlsx")
 data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
 phylo_cz <- "./resources/phylo/phylo_cz_v1/output.nex"
 phylo_cz <- ape::read.nexus(phylo_cz)
-phylo_meta <- "./resources/phylo/phylo_meta_v1/output.nex"
-phylo_meta <- ape::read.nexus(phylo_meta)
 ################################### Data preparation#####################
 # in data bodovka unite columns genus and species, separator _, name sp_orig
 data_bodovka <- data_bodovka %>%
   unite(col = "sp_orig", Genus, Species, sep = "_", remove = TRUE)
+
+data_bodovka$sp_orig<-gsub("_", " ", data_bodovka$sp_orig)
+data_bodovka$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", data_bodovka$sp_orig)
+data_bodovka$sp_orig <- gsub("Phoenicorus phoenicorus", "Phoenicurus phoenicurus", data_bodovka$sp_orig)
+data_bodovka$sp_orig <- gsub("Parus palustris", "Poecile palustris", data_bodovka$sp_orig)
 
 # In data_23 replace line column with year 2023, then combine ID with year, separate 
 data_23 <- data_23 %>%
@@ -65,6 +71,16 @@ data_cz_long <- data_cz_long %>%
   select(ID...3, sp_orig...1, behav, substrate,line)%>%
   rename(ID = ID...3, sp_orig = sp_orig...1)
 
+# remove "_" and replace with " " in sp_orig
+data_cz_long$sp_orig <- gsub("_", " ", data_cz_long$sp_orig)
+
+# replace all "Parus caeruleus" with "Cyanistes caeruleus"
+data_cz_long$sp_orig <- gsub("Parus caeruleus", "Cyanistes caeruleus", data_cz_long$sp_orig)
+data_cz_long$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", data_cz_long$sp_orig)
+data_cz_long$sp_orig <- gsub("Phoenicorus phoenicorus", "Phoenicurus phoenicurus", data_cz_long$sp_orig)
+data_cz_long$sp_orig <- gsub("Parus palustris", "Poecile palustris", data_cz_long$sp_orig)
+
+
 # count numbers of actions and individuals per species
 count_actions_sp <- data_cz_long%>%
   group_by(sp_orig) %>%
@@ -80,7 +96,7 @@ counts_sp <- left_join(count_actions_sp, count_individuals_sp, by = "sp_orig")
 counts_sp <- counts_sp%>%
   rename(actions = n.x, individuals = n.y)
 
-# create filtering list for easy species removal actions  and individuals > 2 + remove Piciformes 
+# create filtering list for easy species removal actions  and individuals < 3 + remove Piciformes 
 filter_list <- counts_sp %>%
   filter(actions < 10 | individuals < 3) %>%
   pull(sp_orig)%>%
@@ -128,7 +144,6 @@ missed_species <- data_bodovka %>%
 # sp_orig in data_cz_long to csv
 write.csv(counts_sp$sp_orig, file = "./resources/sp_orig.csv")
 
-
 ######################### Basic Graphs #####################################
 # stacked bar chart of method, substrate, foliage cover and bird height
 graph_method<-ggplot(data_cz_long, aes(x = line, fill = behav)) + 
@@ -149,9 +164,10 @@ graph_method<-ggplot(data_cz_long, aes(x = line, fill = behav)) +
 
 graph_substrate<-ggplot(data_cz_long, aes(x = line, fill = substrate)) + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(),axis.text.x=element_blank(),legend.background = element_rect(fill='transparent'), 
-        axis.ticks.x=element_blank())+
+        axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank())+
   geom_bar(position="fill")+
-  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +scale_fill_manual(
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
+  scale_fill_manual(
     values = c(air = "#AEEEEE",
                bark = "#F5DEB3",
                ground = "#8B7500",
@@ -160,6 +176,9 @@ graph_substrate<-ggplot(data_cz_long, aes(x = line, fill = substrate)) +
   labs(x="", y="", title = "Foraging substrate")
 
 graph_method+graph_substrate
+
+
+
 
 graph_foliage<- data_cz%>% 
   filter(!is.na(dist_stem))%>%
@@ -184,6 +203,55 @@ graph_foliage+graph_distance
 
 
 grid.arrange(graph_method, graph_substrate, graph_foliage, graph_distance, ncol = 2)
+
+
+###### Connections graph between method-substrate
+edges<- data_cz_long%>%
+  count(behav, substrate, name="weight")
+edges <- edges %>%
+  mutate(weight = weight / sum(weight) * 100)
+substrate_colors <- c(air = "#AEEEEE", bark = "#F5DEB3", ground = "#8B7500", 
+                      leaf = "#556B2F", other = "#2F4F4F")
+
+behav_colors <- c(flycatach = "#0cf0e8", glean = "#06c24b", hang_glean = "#8B7500",
+                  hover_snatch = "#9606c2", manipulation = "#0677c2", pounce = "#2F4F4F", 
+                  probe = "#c2b906", snatch = "#ed8105")
+
+
+graph_connections <- graph_from_data_frame(edges, directed = FALSE)
+
+node_type <- ifelse(V(graph_connections)$name %in% edges$behav, "Behavior", "Substrate")
+node_colors <- ifelse(node_type == "Behavior", "#F8766D", "#00BFC4")  # Red for behaviors, Blue for substrates
+
+ggraph(graph_connections, layout = "fr") + 
+  geom_edge_link(aes(edge_alpha = weight, edge_width = weight), 
+                 edge_color = "gray70", curvature = 0.3) + 
+  geom_node_point(aes(color = node_type), size = 6) +  
+  geom_node_text(aes(label = name), repel = TRUE, size = 5) +  
+  scale_edge_alpha(range = c(0.3, 1)) +  
+  scale_edge_width(range = c(0.5, 2)) +  
+  scale_color_manual(values = c("Behavior" = "#F8766D", "Substrate" = "#00BFC4")) +  
+  theme_void() +  
+  theme(legend.position = "none")
+
+
+ggplot(edges, aes(axis1 = behav, axis2 = substrate, y = weight)) +
+  geom_alluvium(aes(fill = behav), width = 1/8, alpha = 0.9, knot.pos = 0.3) + 
+  geom_stratum(aes(fill = behav), width = 1/6) +  
+  geom_stratum(aes(fill = substrate), width = 1/6) +  
+  scale_fill_manual(values = c(behav_colors, substrate_colors), name = "Category") +
+  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) + # Convert y-axis to percentages
+  theme_minimal() +  
+  theme(panel.grid = element_blank(),  # Remove gridlines
+        axis.text.y = element_text(size = 12), 
+        axis.text.x = element_text(size = 14),
+        axis.ticks = element_blank(),
+        legend.position = "right",
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14)) +
+  labs(title = "Behavior-Substrate Co-occurrence",
+       x = NULL, y = "Percentage (%)")
+
 
 ############# Levins Specialization index ##########
 # 𝑩= 𝟏Σ𝒑𝒊𝟐
