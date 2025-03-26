@@ -20,13 +20,13 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 data_23 <- read_excel("./data/behav_data_23.xlsx")
 data_24 <- read_excel("./data/behav_data_24.xlsx")
 data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
-phylo_cz <- "./resources/phylo/phylo_cz_v1/output.nex"
-phylo_cz <- ape::read.nexus(phylo_cz)
 ################################### Data preparation#####################
 # in data bodovka unite columns genus and species, separator _, name sp_orig
 data_bodovka <- data_bodovka %>%
   unite(col = "sp_orig", Genus, Species, sep = "_", remove = TRUE)
 
+
+# rename species back from birdlife to eBird names, correct mistakes
 data_bodovka$sp_orig<-gsub("_", " ", data_bodovka$sp_orig)
 data_bodovka$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", data_bodovka$sp_orig)
 data_bodovka$sp_orig <- gsub("Phoenicorus phoenicorus", "Phoenicurus phoenicurus", data_bodovka$sp_orig)
@@ -43,7 +43,8 @@ data_24 <- data_24 %>%
   unite(col = "ID", ID, line, sep = "_", remove = TRUE)
 
 # combine data_23 and data_24
-data_cz <- bind_rows(data_23, data_24)
+data_cz <- bind_rows(data_23, data_24)%>%
+  unite(col = "sp_orig", genus, species, sep = "_", remove = TRUE)
 
 # Method - remove NA, unite genus and species, pivot longer
 data_method_cz <- data_cz %>%
@@ -98,12 +99,15 @@ counts_sp <- counts_sp%>%
 
 # create filtering list for easy species removal actions  and individuals < 3 + remove Piciformes 
 filter_list <- counts_sp %>%
-  filter(actions < 10 | individuals < 3) %>%
+  filter(actions < 20 | individuals < 5) %>%
   pull(sp_orig)%>%
   c("Dendrocopos_major", "Dendrocopos_minor", "Dryocopus_martius")
 
 # Filter out species from filter_list and provide final list of passerines (n=19)
 data_cz_long <- data_cz_long %>%
+  filter(!sp_orig %in% filter_list)
+
+data_cz <- data_cz %>%
   filter(!sp_orig %in% filter_list)
 
 # Table with species and percentage of all observations
@@ -149,35 +153,35 @@ write.csv(counts_sp$sp_orig, file = "./resources/sp_orig.csv")
 graph_method<-ggplot(data_cz_long, aes(x = line, fill = behav)) + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.title = element_blank(), axis.text.x=element_blank(), legend.background = element_rect(fill='transparent'),
         axis.ticks.x=element_blank())+
-  geom_bar(position="fill")+
+  geom_bar(position="fill", color="black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_manual(
-    values = c(flycatach = "#0cf0e8",
+    values = c(flycatch = "#0cf0e8",
                glean = "#06c24b",
                hang_glean = "#8B7500",
                hover_snatch = "#9606c2",
                manipulation = "#0677c2",
                pounce = "#2F4F4F",
                probe = "#c2b906",
-               snatch = "#ed8105"))+
-  labs(x="", y="", title = "Foraging method")
+               snatch = "#ed8105"),
+    labels=c("Flycatch","Glean","Hang-Glean", "Hover-Snatch", "Manipulation", "Pounce", "Probe", "Snatch"))+
+  labs(x="", y="Frekvence využití metody/substrátu v %", title = "Metoda")
 
 graph_substrate<-ggplot(data_cz_long, aes(x = line, fill = substrate)) + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(),axis.text.x=element_blank(),legend.background = element_rect(fill='transparent'), 
         axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank())+
-  geom_bar(position="fill")+
+  geom_bar(position="fill", color="black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_manual(
     values = c(air = "#AEEEEE",
                bark = "#F5DEB3",
                ground = "#8B7500",
                leaf = "#556B2F",
-               other = "#2F4F4F"))+
-  labs(x="", y="", title = "Foraging substrate")
+               other = "#2F5F8F"),
+    labels=c("Vzduch","Kůra","Půda", "List", "Ostatní"))+
+  labs(x="", y="", title = "Substrát")
 
 graph_method+graph_substrate
-
-
 
 
 graph_foliage<- data_cz%>% 
@@ -187,23 +191,39 @@ graph_foliage<- data_cz%>%
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank())+
   geom_bar(position="fill", color= "black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
-  scale_fill_brewer(palette = "Greens")+
-  labs(x="", y="", title = "Foliage density")
+  scale_fill_manual(
+    values = RColorBrewer::brewer.pal(3, "Greens"),
+    labels = c("Nízká", "Střední", "Vysoká")
+  ) +
+  labs(x="", y="Frekvence preferencí olistění/vzdálenosti od kmene v %", title = "Hustota olistění")
 
 graph_distance<-data_cz%>% 
   drop_na(dist_stem)%>%
   ggplot(aes(x = plot, fill = factor(dist_stem, levels=c("edge", "outer", "inner", "stem")))) + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank())+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank())+
   geom_bar(position="fill", color= "black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
-  scale_fill_brewer(palette = "Oranges")+
-  labs(x="", y="", title = "Bird distance from stem")
+  scale_fill_manual(
+    values = RColorBrewer::brewer.pal(4, "Oranges"),
+    labels = c("Okraj", "Vnější", "Vnitřní", "Kmen")
+  ) +
+  labs(x="", y="", title = "Vzdálenost od kmene")
 
 graph_foliage+graph_distance
 
 
-grid.arrange(graph_method, graph_substrate, graph_foliage, graph_distance, ncol = 2)
+grid.arrange(graph_method, graph_substrate, graph_foliage, graph_distance, ncol = 2) # ugly, not worth the headache
 
+# Count percentages of method and substrate in data_cz_long
+method_counts <- data_cz_long %>%
+  count(behav) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
+
+substrate_counts <- data_cz_long %>%
+  count(substrate) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
 
 ###### Connections graph between method-substrate
 edges<- data_cz_long%>%
