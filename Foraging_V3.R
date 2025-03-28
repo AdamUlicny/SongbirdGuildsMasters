@@ -14,6 +14,9 @@ library(gridExtra)
 library(igraph)
 library(ggraph)
 library(ggalluvial)
+library(ggrepel)
+library(gt)
+library(scales)
 
 ################################### Load data ###########################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -25,7 +28,10 @@ data_bodovka <- read_excel("./data/bodovka_data_23.xlsx")
 data_bodovka <- data_bodovka %>%
   unite(col = "sp_orig", Genus, Species, sep = "_", remove = TRUE)
 
-
+unique_species <- data_bodovka %>%
+  select(sp_orig) %>%
+  distinct() %>%
+  nrow()
 # rename species back from birdlife to eBird names, correct mistakes
 data_bodovka$sp_orig<-gsub("_", " ", data_bodovka$sp_orig)
 data_bodovka$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", data_bodovka$sp_orig)
@@ -46,10 +52,15 @@ data_24 <- data_24 %>%
 data_cz <- bind_rows(data_23, data_24)%>%
   unite(col = "sp_orig", genus, species, sep = "_", remove = TRUE)
 
+# count unique sp_orig entries in data_cz
+unique_species <- data_cz %>%
+  select(sp_orig) %>%
+  distinct() %>%
+  nrow()
+
 # Method - remove NA, unite genus and species, pivot longer
 data_method_cz <- data_cz %>%
   filter(!is.na(behavior_1)) %>%
-  unite(col = "sp_orig", genus, species, sep = "_", remove = TRUE) %>%
   pivot_longer(cols = starts_with("behavior"), 
                names_to = "x", values_to = "behav") %>%
   select(sp_orig, behav, ID ) %>%
@@ -58,7 +69,6 @@ data_method_cz <- data_cz %>%
 # Substrate - remove NA, unite genus and species, pivot longer
 data_substrate_cz <- data_cz %>%
   filter(!is.na(behavior_1)) %>%
-  unite(col = "sp_orig", genus, species, sep = "_", remove = TRUE) %>%
   pivot_longer(cols = starts_with("substrate_main"),
                names_to = "x", values_to = "substrate") %>%
   select(sp_orig, substrate, ID) %>%
@@ -101,11 +111,17 @@ counts_sp <- counts_sp%>%
 filter_list <- counts_sp %>%
   filter(actions < 20 | individuals < 5) %>%
   pull(sp_orig)%>%
-  c("Dendrocopos_major", "Dendrocopos_minor", "Dryocopus_martius")
+  c("Dendrocopos major", "Dendrocopos minor", "Dryocopus martius")
 
 # Filter out species from filter_list and provide final list of passerines (n=19)
 data_cz_long <- data_cz_long %>%
   filter(!sp_orig %in% filter_list)
+
+unique_species <- data_cz_long %>%
+  select(sp_orig) %>%
+  distinct() %>%
+  nrow()
+
 
 data_cz <- data_cz %>%
   filter(!sp_orig %in% filter_list)
@@ -132,12 +148,43 @@ frequency_bodovka <- data_bodovka %>%
   arrange(desc(percentage))
 
 # compare histograms of frequency per species in data_cz and data_bodovka showing only species shared by both tables
-ggplot(data = frequency_cz %>% filter(sp_orig %in% frequency_bodovka$sp_orig), aes(x = reorder(sp_orig, -percentage), y = percentage)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
+ggplot(data = frequency_cz %>% filter(sp_orig %in% frequency_bodovka$sp_orig), 
+       aes(x = reorder(sp_orig, -percentage), y = percentage, fill = "Behaviorální pozorování")) +  
+  geom_bar(stat = "identity") +
+  geom_bar(data = frequency_bodovka %>% filter(sp_orig %in% frequency_cz$sp_orig), 
+           aes(x = reorder(sp_orig, -percentage), y = percentage, fill = "Bodový transekt"), 
+           stat = "identity", alpha = 0.5) +
+  ylim(0, 20) +
   coord_flip() +
-  labs(x = "Species", y = "Percentage of all observations (%)") +
-  theme_minimal() +
-  geom_bar(data = frequency_bodovka %>% filter(sp_orig %in% frequency_cz$sp_orig), aes(x = reorder(sp_orig, -percentage), y = percentage), stat = "identity", fill = "red", alpha = 0.5)
+  labs(x = "", y = "Frekvence pozorování v %", fill = "Typ datasetu") +
+  scale_fill_manual(values = c("Behaviorální pozorování" = "steelblue", "Bodový transekt" = "red")) +
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    panel.background = element_blank(), 
+    axis.line = element_line(colour = "black"),
+    legend.position = c(0.6, 0.9),  # Adjusts the legend position
+    legend.justification = c(0, 1)  # Anchors the legend at the top-left corner of its position
+  )
+
+ggplot() +  
+  geom_point(data = frequency_cz %>% filter(sp_orig %in% frequency_bodovka$sp_orig), 
+             aes(x = percentage, y = reorder(sp_orig, -percentage), color = "Behaviorální pozorování"), 
+             size = 3) +  
+  geom_point(data = frequency_bodovka %>% filter(sp_orig %in% frequency_cz$sp_orig), 
+             aes(x = percentage, y = reorder(sp_orig, -percentage), color = "Bodový transekt"), 
+             size = 3, alpha = 0.7) +  
+  xlim(0, 20) +  
+  labs(x = "Procento pozorování v %", y = "", color = "Typ datasetu") +  
+  scale_color_manual(values = c("Behaviorální pozorování" = "steelblue", "Bodový transekt" = "red")) +  
+  theme_minimal() +  
+  theme(
+    legend.position = c(0.8, 0.8),  
+    legend.justification = c(0, 1)
+  )
+
+
+
 
 # species in data_bodovka, not present in passerines_cz 
 missed_species <- data_bodovka %>%
@@ -165,7 +212,7 @@ graph_method<-ggplot(data_cz_long, aes(x = line, fill = behav)) +
                probe = "#c2b906",
                snatch = "#ed8105"),
     labels=c("Flycatch","Glean","Hang-Glean", "Hover-Snatch", "Manipulation", "Pounce", "Probe", "Snatch"))+
-  labs(x="", y="Frekvence využití metody/substrátu v %", title = "Metoda")
+  labs(x="Metoda", y="Využití metody/substrátu v %", title = "")
 
 graph_substrate<-ggplot(data_cz_long, aes(x = line, fill = substrate)) + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(),axis.text.x=element_blank(),legend.background = element_rect(fill='transparent'), 
@@ -179,10 +226,21 @@ graph_substrate<-ggplot(data_cz_long, aes(x = line, fill = substrate)) +
                leaf = "#556B2F",
                other = "#2F5F8F"),
     labels=c("Vzduch","Kůra","Půda", "List", "Ostatní"))+
-  labs(x="", y="", title = "Substrát")
+  labs(x="Substrát", y="", title = "")
 
 graph_method+graph_substrate
 
+
+# percentages of behav categories in data_cz_long
+data_cz_long %>%
+  count(behav) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
+
+data_cz_long %>%
+  count(behav) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
 
 graph_foliage<- data_cz%>% 
   filter(!is.na(dist_stem))%>%
@@ -195,26 +253,27 @@ graph_foliage<- data_cz%>%
     values = RColorBrewer::brewer.pal(3, "Greens"),
     labels = c("Nízká", "Střední", "Vysoká")
   ) +
-  labs(x="", y="Frekvence preferencí olistění/vzdálenosti od kmene v %", title = "Hustota olistění")
+  labs(x="Hustota olistění", y="Preference olistění/pozice na vegetaci v %", title = "")
 
 graph_distance<-data_cz%>% 
   drop_na(dist_stem)%>%
   ggplot(aes(x = plot, fill = factor(dist_stem, levels=c("edge", "outer", "inner", "stem")))) + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank())+
+  theme(element_text(size=14),panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank())+
   geom_bar(position="fill", color= "black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_manual(
     values = RColorBrewer::brewer.pal(4, "Oranges"),
     labels = c("Okraj", "Vnější", "Vnitřní", "Kmen")
   ) +
-  labs(x="", y="", title = "Vzdálenost od kmene")
+  labs(x="Pozice na vegetaci", y="", title = "")
 
-graph_foliage+graph_distance
+graph_method+graph_substrate+graph_foliage+graph_distance
+
 
 
 grid.arrange(graph_method, graph_substrate, graph_foliage, graph_distance, ncol = 2) # ugly, not worth the headache
 
-# Count percentages of method and substrate in data_cz_long
+# Counts and percentages of method and substrate in data_cz_long
 method_counts <- data_cz_long %>%
   count(behav) %>%
   mutate(percentage = n / sum(n) * 100) %>%
@@ -222,6 +281,33 @@ method_counts <- data_cz_long %>%
 
 substrate_counts <- data_cz_long %>%
   count(substrate) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
+
+# counts and percentages of vegetation only foraging actions
+veget_counts <- data_cz_long %>%
+  filter(substrate=="bark"|substrate=="leaf")%>%
+  count(substrate) %>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
+
+# counts and percentages of position on tree
+distance_counts<-data_cz%>% 
+  drop_na(dist_stem)%>%
+  count(dist_stem)%>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
+
+foliage_counts<-data_cz%>% 
+  drop_na(foliage_dens)%>%
+  count(foliage_dens)%>%
+  mutate(percentage = n / sum(n) * 100) %>%
+  arrange(desc(percentage))
+
+
+# counts and percentages of behav-substrate combinations
+data_cz_long %>%
+  count(behav, substrate) %>%
   mutate(percentage = n / sum(n) * 100) %>%
   arrange(desc(percentage))
 
@@ -256,7 +342,7 @@ ggraph(graph_connections, layout = "fr") +
 
 
 ggplot(edges, aes(axis1 = behav, axis2 = substrate, y = weight)) +
-  geom_alluvium(aes(fill = behav), width = 1/8, alpha = 0.9, knot.pos = 0.3) + 
+  geom_alluvium(aes(), width = 1/8, alpha = 0.9, knot.pos = 0.3) + 
   geom_stratum(aes(fill = behav), width = 1/6) +  
   geom_stratum(aes(fill = substrate), width = 1/6) +  
   scale_fill_manual(values = c(behav_colors, substrate_colors), name = "Category") +
@@ -288,7 +374,7 @@ calculate_index <- function(data, select_column, n_categories = 5) {
 
 
 # Calculate specialization index for foraging method
-levins_method <- calculate_index(data_cz_long, behav, 7)%>%
+levins_method <- calculate_index(data_cz_long, behav, 8)%>%
   rename(Ba_method = Ba, B_method = B)
 
 levins_substrate <- calculate_index(data_cz_long, substrate, 5)%>%
@@ -306,18 +392,49 @@ abline(c(0,1), lty=2, col="red")
 # ggplot
 graph_specialization <- ggplot(levins_method_substrate, aes(x = Ba_method, y = Ba_substrate)) +
   geom_point(size = 3) +
-  labs(x = "Method specialization", y = "Substrate specialization") +
-  xlim(0.3, 1) +
-  ylim(0.3, 1) +
-  geom_text(aes(label = sp_orig), vjust = -0.5, hjust = 0.5, size = 3) +  # Add species labels
+  labs(x = "Specializace na metodu", y = "Specializace na substrát") +
+  #geom_text(aes(label = sp_orig), vjust = -0.5, hjust = 0.5, size = 3) +  # Add species labels
   geom_smooth(method = "lm", color = "black", se = F, size = 1) +  # Line of best fit
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
-  theme_classic() +
-  theme(axis.title = element_text(size = 16))
+  theme_classic()  +
+  scale_x_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +  # Set limits inside scale
+  scale_y_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1))  +
+  theme(axis.title = element_text(size = 20))
+
+# version with labels and lines
+graph_specialization <- ggplot(levins_method_substrate, aes(x = Ba_method, y = Ba_substrate)) +
+  geom_point(size = 3) +
+  labs(x = "Specializace na metodu", y = "Specializace na substrát") +
+  xlim(0.3, 1) +
+  ylim(0.3, 1) +
+  geom_smooth(method = "lm", color = "black", se = F, size = 1) +  # Line of best fit
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
+  geom_text_repel(aes(label = sp_orig), size = 5, force = 1000, segment.size = 0.5, segment.color = "grey50", max.overlaps = Inf) + # Repelled labels with connecting lines
+  theme_classic()  +
+  scale_x_continuous(labels = label_comma(decimal.mark = ",")) +  # Change dot to comma
+  scale_y_continuous(labels = label_comma(decimal.mark = ","))+
+  theme(axis.title = element_text(size = 20))
+
 plot(graph_specialization)
 
 # linear regression
-summary(lm(Ba_substrate ~ Ba_method, levins_method_substrate))
+summary(lm(Ba_substrate ~ Ba_method, levins_method_substrate)) # not correct for these variables
+
+# simple correlation test
+cor.test(levins_method_substrate$Ba_method, levins_method_substrate$Ba_substrate, method = "pearson")
+
+table_specialization <- levins_method_substrate %>%
+  select(sp_orig, Ba_substrate, Ba_method) %>%
+  rename("Druh latinsky" = sp_orig, 
+         "Specializace na substrát" = Ba_substrate, 
+         "Specializace na metodu" = Ba_method) %>%
+  gt() %>%
+  tab_header(title = "") %>%
+  fmt_number(columns = c("Specializace na substrát", "Specializace na metodu"), decimals = 2) %>%
+  cols_align(align = "center") %>%
+  tab_options(table.font.size = "medium")
+
+table_specialization
 
 ################## Dissimilarity matrix ############################
 # prepare data by pivoting wider
@@ -373,7 +490,7 @@ clusMember = cutree(dendro_bray, 5)
 
 # vector of colors
 labelColors = c("#D46B37", "#020C45","#036564","#7A67EE", "#D43B22")
-labelLegend = c("bark", "probe", "leaf", "air", "ground")
+labelLegend = c("Kůra", "Sondování", "Listí", "Vzduch", "Půda")
 
 # guild color function
 colLab <- function(n) {
@@ -390,14 +507,14 @@ dendro_bray_aes = dendrapply(dendro_bray, colLab)
 
 ### plot guilds, colors and legend
 par(mar=c(5,1,1,12))
-plot(dendro_bray_aes, main = "Foraging guilds", type = "rectangle", horiz = T)
+plot(dendro_bray_aes, main = "", type = "rectangle", horiz = T, xlab = "Bray-Curtis vzdálenost")
 legend("topleft", 
        legend = labelLegend, 
        col = labelColors, 
-       pch = c(20,20,20,20), bty = "y",  pt.cex = 1.5, cex = 0.8 , 
+       pch = c(20,20,20,20), bty = "y",  pt.cex = 1.5, cex = 1.2 , 
        text.col = "black", horiz = FALSE,
-       title="Guilds",
-       inset = c(0, 0.1))
+       title="Gildy",
+       inset = c(0, 0.05))
 
 #################### Tanglegram ############################
 
