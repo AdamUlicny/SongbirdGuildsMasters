@@ -97,6 +97,10 @@ count_actions_sp <- data_cz_long%>%
   group_by(sp_orig) %>%
   summarise(n = n())
 
+count_actions_sp %>%
+  filter(n>4)%>%
+  count()
+
 count_individuals_sp <- data_cz_long %>%
   group_by(sp_orig) %>%
   summarise(n = n_distinct(ID))
@@ -111,7 +115,7 @@ counts_sp <- counts_sp%>%
 filter_list <- counts_sp %>%
   filter(actions < 20 | individuals < 5) %>%
   pull(sp_orig)%>%
-  c("Dendrocopos major", "Dendrocopos minor", "Dryocopus martius")
+  c("Dendrocopos major", "Dendrocopos minor", "Dryocopus martius", "Columba palumbus", "Columba oenas", "Cuculus canorus", "Buteo buteo", "Corvus corax", "Garrulus glandarius")
 
 # Filter out species from filter_list and provide final list of passerines (n=19)
 data_cz_long <- data_cz_long %>%
@@ -143,6 +147,7 @@ ggplot(data = frequency_cz, aes(x = reorder(sp_orig, -percentage), y = percentag
 # abundance curve histogram per species in data_bodovka
 frequency_bodovka <- data_bodovka %>%
   group_by(sp_orig) %>%
+  filter(!sp_orig %in% filter_list)%>%
   summarise(n = n()) %>%
   mutate(percentage = n/sum(n)*100) %>%
   arrange(desc(percentage))
@@ -189,8 +194,15 @@ ggplot() +
 # species in data_bodovka, not present in passerines_cz 
 missed_species <- data_bodovka %>%
   filter(!sp_orig %in% data_cz_long$sp_orig) %>%
+  filter(!sp_orig %in% filter_list)%>%
   select(sp_orig) %>%
   distinct()
+
+# species and their counts in data_bodovka
+counts_bodovka <- data_bodovka %>%
+  group_by(sp_orig) %>%
+  summarise(n = n()) %>%
+  filter(!sp_orig %in% filter_list)
 
 # sp_orig in data_cz_long to csv
 write.csv(counts_sp$sp_orig, file = "./resources/sp_orig.csv")
@@ -547,3 +559,18 @@ dendlist(dendro_bray, dendro_jaccard)%>%
              main_left="Bray-Curtis",
              main_right="Jaccard",
              hang=F)
+
+################## Phylogenetic signal ############################
+Bray_  <- as.phylo(dendro_Europe_bray)
+
+# convert data_cz_wide to proportional values
+data_cz_prop <- data_cz_wide %>%
+  mutate_all(~ . / sum(.))
+
+
+trait_labels<-c("Flycatch", "Glean", "Hover", "Pounce", "Probe", "Snatch", "Air", "Bark", "Flower", "Ground", "Leaf")
+
+
+traits_Europe <- phylo4d( x=bray_tree_Europe, tip.data=matrix_Europe_prop )
+
+gridplot.phylo4d(traits_Europe, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Europe", cex.main=1.2, cell.col = white2red(200))
