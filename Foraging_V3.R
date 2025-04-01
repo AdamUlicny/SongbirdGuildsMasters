@@ -17,7 +17,9 @@ library(ggalluvial)
 library(ggrepel)
 library(gt)
 library(scales)
-
+library(phylobase)
+library(phylosignal)
+library(adephylo)
 ################################### Load data ###########################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 data_23 <- read_excel("./data/behav_data_23.xlsx")
@@ -168,27 +170,9 @@ ggplot(data = frequency_cz %>% filter(sp_orig %in% frequency_bodovka$sp_orig),
     panel.grid.minor = element_blank(), 
     panel.background = element_blank(), 
     axis.line = element_line(colour = "black"),
-    legend.position = c(0.6, 0.9),  # Adjusts the legend position
-    legend.justification = c(0, 1)  # Anchors the legend at the top-left corner of its position
+    legend.position = c(0.6, 0.9), 
+    legend.justification = c(0, 1)  
   )
-
-ggplot() +  
-  geom_point(data = frequency_cz %>% filter(sp_orig %in% frequency_bodovka$sp_orig), 
-             aes(x = percentage, y = reorder(sp_orig, -percentage), color = "Behaviorální pozorování"), 
-             size = 3) +  
-  geom_point(data = frequency_bodovka %>% filter(sp_orig %in% frequency_cz$sp_orig), 
-             aes(x = percentage, y = reorder(sp_orig, -percentage), color = "Bodový transekt"), 
-             size = 3, alpha = 0.7) +  
-  xlim(0, 20) +  
-  labs(x = "Procento pozorování v %", y = "", color = "Typ datasetu") +  
-  scale_color_manual(values = c("Behaviorální pozorování" = "steelblue", "Bodový transekt" = "red")) +  
-  theme_minimal() +  
-  theme(
-    legend.position = c(0.8, 0.8),  
-    legend.justification = c(0, 1)
-  )
-
-
 
 
 # species in data_bodovka, not present in passerines_cz 
@@ -323,53 +307,6 @@ data_cz_long %>%
   mutate(percentage = n / sum(n) * 100) %>%
   arrange(desc(percentage))
 
-###### Connections graph between method-substrate
-edges<- data_cz_long%>%
-  count(behav, substrate, name="weight")
-edges <- edges %>%
-  mutate(weight = weight / sum(weight) * 100)
-substrate_colors <- c(air = "#AEEEEE", bark = "#F5DEB3", ground = "#8B7500", 
-                      leaf = "#556B2F", other = "#2F4F4F")
-
-behav_colors <- c(flycatach = "#0cf0e8", glean = "#06c24b", hang_glean = "#8B7500",
-                  hover_snatch = "#9606c2", manipulation = "#0677c2", pounce = "#2F4F4F", 
-                  probe = "#c2b906", snatch = "#ed8105")
-
-
-graph_connections <- graph_from_data_frame(edges, directed = FALSE)
-
-node_type <- ifelse(V(graph_connections)$name %in% edges$behav, "Behavior", "Substrate")
-node_colors <- ifelse(node_type == "Behavior", "#F8766D", "#00BFC4")  # Red for behaviors, Blue for substrates
-
-ggraph(graph_connections, layout = "fr") + 
-  geom_edge_link(aes(edge_alpha = weight, edge_width = weight), 
-                 edge_color = "gray70", curvature = 0.3) + 
-  geom_node_point(aes(color = node_type), size = 6) +  
-  geom_node_text(aes(label = name), repel = TRUE, size = 5) +  
-  scale_edge_alpha(range = c(0.3, 1)) +  
-  scale_edge_width(range = c(0.5, 2)) +  
-  scale_color_manual(values = c("Behavior" = "#F8766D", "Substrate" = "#00BFC4")) +  
-  theme_void() +  
-  theme(legend.position = "none")
-
-
-ggplot(edges, aes(axis1 = behav, axis2 = substrate, y = weight)) +
-  geom_alluvium(aes(), width = 1/8, alpha = 0.9, knot.pos = 0.3) + 
-  geom_stratum(aes(fill = behav), width = 1/6) +  
-  geom_stratum(aes(fill = substrate), width = 1/6) +  
-  scale_fill_manual(values = c(behav_colors, substrate_colors), name = "Category") +
-  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) + # Convert y-axis to percentages
-  theme_minimal() +  
-  theme(panel.grid = element_blank(),  # Remove gridlines
-        axis.text.y = element_text(size = 12), 
-        axis.text.x = element_text(size = 14),
-        axis.ticks = element_blank(),
-        legend.position = "right",
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 14)) +
-  labs(title = "Behavior-Substrate Co-occurrence",
-       x = NULL, y = "Percentage (%)")
-
 
 ############# Levins Specialization index ##########
 # 𝑩= 𝟏Σ𝒑𝒊𝟐
@@ -405,32 +342,33 @@ abline(c(0,1), lty=2, col="red")
 graph_specialization <- ggplot(levins_method_substrate, aes(x = Ba_method, y = Ba_substrate)) +
   geom_point(size = 3) +
   labs(x = "Specializace na metodu", y = "Specializace na substrát") +
-  #geom_text(aes(label = sp_orig), vjust = -0.5, hjust = 0.5, size = 3) +  # Add species labels
-  geom_smooth(method = "lm", color = "black", se = F, size = 1) +  # Line of best fit
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
+  #geom_text(aes(label = sp_orig), vjust = -0.5, hjust = 0.5, size = 3) +  
+  geom_smooth(method = "lm", color = "black", se = F, size = 1) + 
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  
   theme_classic()  +
-  scale_x_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +  # Set limits inside scale
+  scale_x_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +  
   scale_y_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1))  +
   theme(axis.title = element_text(size = 20))
+plot(graph_specialization)
 
 # version with labels and lines
-graph_specialization <- ggplot(levins_method_substrate, aes(x = Ba_method, y = Ba_substrate)) +
+graph_specialization2 <- ggplot(levins_method_substrate, aes(x = Ba_method, y = Ba_substrate)) +
   geom_point(size = 3) +
   labs(x = "Specializace na metodu", y = "Specializace na substrát") +
   xlim(0.3, 1) +
   ylim(0.3, 1) +
-  geom_smooth(method = "lm", color = "black", se = F, size = 1) +  # Line of best fit
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  # Diagonal reference line
-  geom_text_repel(aes(label = sp_orig), size = 5, force = 1000, segment.size = 0.5, segment.color = "grey50", max.overlaps = Inf) + # Repelled labels with connecting lines
+  geom_smooth(method = "lm", color = "black", se = F, size = 1) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  
+  geom_text_repel(aes(label = sp_orig), size = 5, force = 1000, segment.size = 0.5, segment.color = "grey50", max.overlaps = Inf) + 
   theme_classic()  +
-  scale_x_continuous(labels = label_comma(decimal.mark = ",")) +  # Change dot to comma
+  scale_x_continuous(labels = label_comma(decimal.mark = ",")) +
   scale_y_continuous(labels = label_comma(decimal.mark = ","))+
   theme(axis.title = element_text(size = 20))
 
-plot(graph_specialization)
+plot(graph_specialization2)
 
 # linear regression
-summary(lm(Ba_substrate ~ Ba_method, levins_method_substrate)) # not correct for these variables
+summary(lm(Ba_substrate ~ Ba_method, levins_method_substrate)) # not important here
 
 # simple correlation test
 cor.test(levins_method_substrate$Ba_method, levins_method_substrate$Ba_substrate, method = "pearson")
@@ -497,18 +435,21 @@ plot(dendro_phylo,horiz=T, main="Phylogeny", )
 
 ######### Colored guilds ##############
 
-# cut dendrogram into 5 guilds
-clusMember = cutree(dendro_bray, 5)
+# cut dendrogram into 6 guilds
+clusMember = cutree(dendro_bray, 6)
+dend_order <- order.dendrogram(dendro_bray)
+clusMember <- clusMember[dend_order]
 
 # vector of colors
-labelColors = c("#D46B37", "#020C45","#036564","#7A67EE", "#D43B22")
-labelLegend = c("Kůra", "Sondování", "Listí", "Vzduch", "Půda")
+labelColors = c("#D46B37","#020C45","#14a25e", "#00cccc","#7A67EE", "#D43B22")
+labelLegend = c("Glean-Kůra", "Sondování", "Glean-listy", "Větvičky", "Vzduch", "Půda")
 
 # guild color function
 colLab <- function(n) {
   if (is.leaf(n)) {
     a <- attributes(n)
-    labCol <- labelColors[clusMember[which(names(clusMember) == a$label)]]
+    cluster_id <- clusMember[a$label]  # Direct lookup of the cluster ID
+    labCol <- labelColors[cluster_id]  # Assign the color for that cluster
     attr(n, "nodePar") <- c(a$nodePar, lab.col = labCol)
   }
   n
@@ -520,7 +461,7 @@ dendro_bray_aes = dendrapply(dendro_bray, colLab)
 ### plot guilds, colors and legend
 par(mar=c(5,1,1,12))
 plot(dendro_bray_aes, main = "", type = "rectangle", horiz = T, xlab = "Bray-Curtis vzdálenost")
-legend("topleft", 
+ legend("topleft", 
        legend = labelLegend, 
        col = labelColors, 
        pch = c(20,20,20,20), bty = "y",  pt.cex = 1.5, cex = 1.2 , 
@@ -561,16 +502,62 @@ dendlist(dendro_bray, dendro_jaccard)%>%
              hang=F)
 
 ################## Phylogenetic signal ############################
-Bray_  <- as.phylo(dendro_Europe_bray)
+dendro_bray_traits  <- as.phylo(dendro_bray_aes)
 
-# convert data_cz_wide to proportional values
-data_cz_prop <- data_cz_wide %>%
-  mutate_all(~ . / sum(.))
+# pivot wider data_method_cz, colnames from behav columns, values are counts. Rownames are species
+method_wide <- data_method_cz %>%
+  select(-ID)%>%
+  group_by(sp_orig) %>% 
+  count(sp_orig,behav, sort=TRUE)%>% 
+  pivot_wider(names_from="behav",values_from="n")%>%
+  replace(is.na(.), 0)
+
+substrate_wide <- data_substrate_cz %>%
+  select(-ID)%>%
+  group_by(sp_orig) %>% 
+  count(sp_orig,substrate, sort=TRUE)%>% 
+  pivot_wider(names_from="substrate",values_from="n")%>%
+  replace(is.na(.), 0)
+
+method_substrate_cz<-left_join(method_wide, substrate_wide, by = "sp_orig")
+method_substrate_cz$sp_orig<-gsub("_", " ", method_substrate_cz$sp_orig)
+
+method_substrate_cz$sp_orig <- gsub("Parus caeruleus", "Cyanistes caeruleus", method_substrate_cz$sp_orig)
+method_substrate_cz$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", method_substrate_cz$sp_orig)
+method_substrate_cz$sp_orig <- gsub("Phoenicorus phoenicorus", "Phoenicurus phoenicurus", method_substrate_cz$sp_orig)
+method_substrate_cz$sp_orig <- gsub("Parus palustris", "Poecile palustris", method_substrate_cz$sp_orig)
 
 
-trait_labels<-c("Flycatch", "Glean", "Hover", "Pounce", "Probe", "Snatch", "Air", "Bark", "Flower", "Ground", "Leaf")
+
+behavior_columns <- colnames(method_substrate_cz)[2:9]
+substrate_columns <- colnames(method_substrate_cz)[10:14]
+
+method_substrate_cz <- method_substrate_cz%>%
+  filter(!sp_orig %in% filter_list)%>%
+  remove_rownames%>%
+  column_to_rownames(var="sp_orig")
 
 
-traits_Europe <- phylo4d( x=bray_tree_Europe, tip.data=matrix_Europe_prop )
 
-gridplot.phylo4d(traits_Europe, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Europe", cex.main=1.2, cell.col = white2red(200))
+# convert method_substrate_cz to proportional values 
+matrix_cz_prop <-method_substrate_cz%>%
+  mutate(
+    behavior_sum = rowSums(across(all_of(behavior_columns))),
+    substrate_sum = rowSums(across(all_of(substrate_columns)))
+  ) %>%
+  mutate(across(all_of(behavior_columns), ~ ifelse(behavior_sum == 0, 0, . / behavior_sum))) %>%
+  mutate(across(all_of(substrate_columns), ~ ifelse(substrate_sum == 0, 0, . / substrate_sum)))%>%
+  select(-behavior_sum,-substrate_sum)  
+
+trait_labels<-c("Glean", "Probe", "Hang-glean", "Manipulation", "Hover-snatch", "Flycatch", "Snatch", "Pounce", "Kůra", "Listy", "Půda", "Vzduch", "Ostatní")
+
+
+traits_cz <- phylo4d( x=dendro_bray_traits, tip.data=matrix_cz_prop )
+dev.off()
+table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=1, cex.label=0.6, cex.legend=0.8, col = "red", var.label=trait_labels, main="")
+
+table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds CZ")
+
+
+
+gridplot.phylo4d(traits_cz, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Global", cex.main=1.2, cell.col = white2red(200))
