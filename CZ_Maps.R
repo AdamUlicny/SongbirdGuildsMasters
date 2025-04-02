@@ -151,7 +151,7 @@ if ("L1" %in% colnames(poly_coords)) {
     altitude = 4690,
     zscale = 50,
     color = "blue",
-    linewidth = 3
+    linewidth = 3 
   )
 }
 
@@ -171,3 +171,40 @@ render_highquality(
   clear = TRUE
 )
 
+
+# Load required packages
+library(ggplot2)
+library(sf)
+library(rnaturalearth)
+
+library(rnaturalearthdata)
+
+# Define study site coordinates
+coords <- data.frame(
+  Latitude = c(-27.23, -18.87, -12.50, -35.65, -12.47, 30.56, 36.49, 43.94, 
+               29.71, 11.09, 23.45, 27.29, 22.43, 5.11, 10.20, 40.85, 49.93, 
+               -29.48, -30.49, -36.93, -32.78, -26.40, -41.30, -33.80),
+  Longitude = c(152.74, 146.13, 130.95, 143.64, 130.83, -109.75, -121.70, -71.70, 
+                -82.46, 76.77, 120.97, 88.68, 114.18, 100.99, 77.50, -3.94, 14.11, 
+                146.13, 151.74, 149.33, 116.95, 116.23, 148.12, 150.53)
+)
+
+
+# Load a world map
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Create the plot
+map <- ggplot(data = world) +
+  geom_sf(fill = "gray90", color = "black") +  # Draw world map
+  geom_jitter(data = coords, aes(x = Longitude, y = Latitude), 
+              color = "red", size = 4, width = 1, height = 1) +       # Plot study sites
+  theme_minimal() +
+  labs(title = "",
+       x = "",
+       y = "")
+
+# Display the plot
+print(map)
+
+# Save as an image file
+ggsave("study_sites_map.png", map, width = 8, height = 6, dpi = 300)

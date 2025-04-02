@@ -113,7 +113,7 @@ counts_sp <- left_join(count_actions_sp, count_individuals_sp, by = "sp_orig")
 counts_sp <- counts_sp%>%
   rename(actions = n.x, individuals = n.y)
 
-# create filtering list for easy species removal actions  and individuals < 3 + remove Piciformes 
+# create filtering list for easy species removal actions  and individuals < 5 + remove Piciformes 
 filter_list <- counts_sp %>%
   filter(actions < 20 | individuals < 5) %>%
   pull(sp_orig)%>%
@@ -527,8 +527,6 @@ method_substrate_cz$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", meth
 method_substrate_cz$sp_orig <- gsub("Phoenicorus phoenicorus", "Phoenicurus phoenicurus", method_substrate_cz$sp_orig)
 method_substrate_cz$sp_orig <- gsub("Parus palustris", "Poecile palustris", method_substrate_cz$sp_orig)
 
-
-
 behavior_columns <- colnames(method_substrate_cz)[2:9]
 substrate_columns <- colnames(method_substrate_cz)[10:14]
 
@@ -536,8 +534,6 @@ method_substrate_cz <- method_substrate_cz%>%
   filter(!sp_orig %in% filter_list)%>%
   remove_rownames%>%
   column_to_rownames(var="sp_orig")
-
-
 
 # convert method_substrate_cz to proportional values 
 matrix_cz_prop <-method_substrate_cz%>%
@@ -551,13 +547,11 @@ matrix_cz_prop <-method_substrate_cz%>%
 
 trait_labels<-c("Glean", "Probe", "Hang-glean", "Manipulation", "Hover-snatch", "Flycatch", "Snatch", "Pounce", "Kůra", "Listy", "Půda", "Vzduch", "Ostatní")
 
-
 traits_cz <- phylo4d( x=dendro_bray_traits, tip.data=matrix_cz_prop )
 dev.off()
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=1, cex.label=0.6, cex.legend=0.8, col = "red", var.label=trait_labels, main="")
 
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds CZ")
-
 
 
 gridplot.phylo4d(traits_cz, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Global", cex.main=1.2, cell.col = white2red(200))
