@@ -1,5 +1,4 @@
 ############### Analysing large scale patterns of Guild membership and phylogenetic signal ###############
-# Test test
 ############### Load libraries ###############
 library(tidyverse)
 library(readxl)

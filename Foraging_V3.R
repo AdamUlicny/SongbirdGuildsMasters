@@ -52,7 +52,8 @@ data_24 <- data_24 %>%
 
 # combine data_23 and data_24
 data_cz <- bind_rows(data_23, data_24)%>%
-  unite(col = "sp_orig", genus, species, sep = "_", remove = TRUE)
+  unite(col = "sp_orig", genus, species, sep = "_", remove = TRUE)%>%
+  mutate(month = month(date))
 
 # count unique sp_orig entries in data_cz
 unique_species <- data_cz %>%
@@ -194,10 +195,12 @@ write.csv(counts_sp$sp_orig, file = "./resources/sp_orig.csv")
 ######################### Basic Graphs #####################################
 # stacked bar chart of method, substrate, foliage cover and bird height
 graph_method<-ggplot(data_cz_long, aes(x = line, fill = behav)) + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.title = element_blank(), axis.text.x=element_blank(), legend.background = element_rect(fill='transparent'),
-        axis.ticks.x=element_blank())+
+  theme(text=element_text(size=18),panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), axis.line = element_line(colour = "black"), legend.title = element_blank(), 
+        axis.text.x=element_blank(), legend.background = element_rect(fill='transparent'),
+        axis.ticks.x=element_blank(), axis.text.y = element_text(color="black"))+
   geom_bar(position="fill", color="black")+
-  scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
+  scale_y_continuous(labels = label_percent(accuracy = 1, suffix = " %"), expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_manual(
     values = c(flycatch = "#0cf0e8",
                glean = "#06c24b",
@@ -211,8 +214,8 @@ graph_method<-ggplot(data_cz_long, aes(x = line, fill = behav)) +
   labs(x="Metoda", y="Využití metody/substrátu v %", title = "")
 
 graph_substrate<-ggplot(data_cz_long, aes(x = line, fill = substrate)) + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(),axis.text.x=element_blank(),legend.background = element_rect(fill='transparent'), 
-        axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank())+
+  theme(text=element_text(size=18),panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(),axis.text.x=element_blank(),legend.background = element_rect(fill='transparent'), 
+        axis.ticks.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank(),axis.line.y = element_blank())+
   geom_bar(position="fill", color="black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_manual(
@@ -241,10 +244,33 @@ data_cz_long %>%
 graph_foliage<- data_cz%>% 
   filter(!is.na(dist_stem))%>%
   drop_na(foliage_dens)%>%
-  ggplot(aes(x = plot, fill = factor(foliage_dens, levels=c("low", "medium", "high")))) + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank())+
+  ggplot(aes(x = plot, fill = factor(foliage_dens, levels=c("low", "medium", "high")))) +
+  theme(axis.line.y = element_blank(),text=element_text(size=18),panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(),
+        axis.text.x=element_blank())+
   geom_bar(position="fill", color= "black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
+  scale_fill_manual(
+    values = RColorBrewer::brewer.pal(3, "Greens"),
+    labels = c("Nízká", "Střední", "Vysoká")
+  ) +
+  labs(x="Hustota olistění", y="Preference olistění/pozice na vegetaci v %", title = "")
+
+months <- c("4"="Duben", "5"="Květen","6"= "Červen")
+
+graph_foliage_monthly<- data_cz%>% 
+  group_by(month)%>%
+  filter(!is.na(dist_stem))%>%
+  drop_na(foliage_dens)%>%
+  ggplot(aes(x = plot, fill = factor(foliage_dens, levels=c("low", "medium", "high")))) + 
+  facet_wrap(~month, ncol=3, labeller=as_labeller(months))+
+  theme(text=element_text(size=18),, strip.background =element_rect(fill="white"),panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),legend.title = element_blank(), 
+        axis.ticks.x=element_blank(), axis.text.x=element_blank(), axis.text.y = element_text(color="black"))+
+  geom_bar(position="fill", color= "black")+
+  scale_y_continuous(labels = label_percent(accuracy = 1, suffix = " %"), ,expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_manual(
     values = RColorBrewer::brewer.pal(3, "Greens"),
     labels = c("Nízká", "Střední", "Vysoká")
@@ -254,7 +280,10 @@ graph_foliage<- data_cz%>%
 graph_distance<-data_cz%>% 
   drop_na(dist_stem)%>%
   ggplot(aes(x = plot, fill = factor(dist_stem, levels=c("edge", "outer", "inner", "stem")))) + 
-  theme(element_text(size=14),panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"),legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank(), axis.ticks.y=element_blank(), axis.text.y=element_blank())+
+  theme(text=element_text(size=18),panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.title = element_blank(), axis.ticks.x=element_blank(), axis.text.x=element_blank(), 
+        axis.ticks.y=element_blank(), axis.text.y=element_blank(), axis.line.y = element_blank())+
   geom_bar(position="fill", color= "black")+
   scale_y_continuous(labels = scales::percent, expand = c(0, 0), limits = c(0, NA)) +
   scale_fill_manual(
@@ -263,8 +292,9 @@ graph_distance<-data_cz%>%
   ) +
   labs(x="Pozice na vegetaci", y="", title = "")
 
-graph_method+graph_substrate+graph_foliage+graph_distance
+graph_method+graph_substrate+graph_foliage_monthly+graph_distance
 
+graph_foliage_monthly
 
 
 grid.arrange(graph_method, graph_substrate, graph_foliage, graph_distance, ncol = 2) # ugly, not worth the headache
