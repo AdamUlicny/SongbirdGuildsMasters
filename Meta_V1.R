@@ -55,7 +55,11 @@ method_substrate_continents<-method_substrate_meta%>%
 sp<-method_substrate_subset%>%
   pull(Sp_eBird)
 
-phylo_meta <- clootl::extractTree(species=sp, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_meta <-extractTree(species=sp,
+                         taxonomy_year=2021, version="1.4")
+phylo_citations<-getCitations(tree=phylo_meta)
+write.csv(phylo_citations, "resources/phylo_citations.csv")
+
 
 
 ########################## Morphology #################
@@ -273,10 +277,10 @@ dendro_North_America_bray <- dist_Bray_North_America%>%
 
 ############### Phylogeny per continents ##################
 # load phylogeny for each continent
-phylo_Asia <- clootl::extractTree(species=sp_Asia, output.type="scientific", taxonomy.year=2021, version="current")
-phylo_Australia <- clootl::extractTree(species=sp_Australia, output.type="scientific", taxonomy.year=2021, version="current")
-phylo_Europe <- clootl::extractTree(species=sp_Europe, output.type="scientific", taxonomy.year=2021, version="current")
-phylo_North_America <- clootl::extractTree(species=sp_North_America, output.type="scientific", taxonomy.year=2021, version="current")
+phylo_Asia <- clootl::extractTree(species=sp_Asia, label_type="scientific", taxonomy_year=2021, version="1.4")
+phylo_Australia <- clootl::extractTree(species=sp_Australia, label_type="scientific", taxonomy_year=2021, version="1.4")
+phylo_Europe <- clootl::extractTree(species=sp_Europe, label_type="scientific", taxonomy_year=2021, version="1.4")
+phylo_North_America <- clootl::extractTree(species=sp_North_America, label_type="scientific", taxonomy_year=2021, version="1.4")
 
 #matrix for mantel
 phylo_Asia_mantel <- as.dist(
@@ -408,21 +412,26 @@ dendro_North_America_morpho<-dist_morpho_North_America %>%
 ############## Graphs ######################################
 ############# XXXXXXXXXXXXXXXXXX ##########################
 ########### Coloring Guilds ##############################
+# Assign colors to species based on continent
 passeriformes_meta <- method_substrate_meta %>%
   filter(Order == "PASSERIFORMES") %>%
   select(Sp_eBird, continent) %>%
   group_by(Sp_eBird) %>%
   summarize(continent = ifelse(n_distinct(continent) > 1, "Multiple", first(continent)))  # Mark multiple-continent species
-species_to_continent <- setNames(passeriformes_meta$continent, passeriformes_meta$Sp_eBird)
-continent_colors<-c("North_America" = "darkblue",
-                    "Europe" = "darkgreen",
-                    "Asia" = "darkred",
-                    "Australia" = "orange",
-                    "Multiple" = "black")
 
-# Vector colorCodes where each species from species_to_continent is assigned a color from continent_colors
-colorCodes <- sapply(species_to_continent, function(x) continent_colors[x])
-# remove .Asia etc
+species_to_continent <- setNames(passeriformes_meta$continent, passeriformes_meta$Sp_eBird)
+
+# Define colors for each continent
+continent_colors <- c("North_America" = "darkblue",
+                      "Europe" = "darkgreen",
+                      "Asia" = "darkred",
+                      "Australia" = "orange",
+                      "Multiple" = "black")
+
+# Assign colors to species
+colorCodes <- species_to_continent %>% sapply(function(x) continent_colors[x])
+
+# Ensure species names are cleaned (remove suffixes like ".Asia")
 names(colorCodes) <- gsub("\\..*", "", names(colorCodes))
 
 
@@ -438,27 +447,26 @@ dendro_meta_bray<-dendro_meta_bray[[1]]# saving untangled dendrogram back to den
 # without this workflow, we could still do ladderization+step1side, but the phylogeny would be on the left
 
 
-# extract labels/leaves from dendrogram
-labels_phylo_Global<-order.dendrogram(dendro_meta_phylo)
-labels_phylo_Global<-colorCodes[labels_phylo_Global]# assign colors to labels
+# Extract and match labels from dendrograms
+labels_phylo_Global <- labels(dendro_meta_phylo) # Get ordered labels
+labels_bray_Global  <- labels(dendro_meta_bray)  # Get ordered labels
 
-labels_bray_Global<-dendro_meta_bray%>%labels%>%rev()
-labels_bray_Global<-colorCodes[labels_bray_Global]# assign colors to labels
+# Ensure colors match the order of dendrogram labels
+labels_colors_phylo <- colorCodes[labels_phylo_Global]
+labels_colors_bray  <- colorCodes[labels_bray_Global]
 
-labels_colors(dendro_meta_phylo) <- colorCodes[labels(dendro_meta_phylo)][order.dendrogram(dendro_meta_phylo)]
-labels_colors(dendro_meta_bray) <- colorCodes[labels(dendro_meta_bray)][order.dendrogram(dendro_meta_bray)]
+# Assign colors to dendrogram labels
+labels_colors(dendro_meta_phylo) <- labels_colors_phylo
+labels_colors(dendro_meta_bray)  <- labels_colors_bray
 
-ordered_labels_phylo <- labels(dendro_meta_phylo)[order.dendrogram(dendro_meta_phylo)]
-labels_colors_phylo<-colorCodes[ordered_labels_phylo]
-data.frame(Species = ordered_labels_phylo, Color = labels_colors_phylo)
+# Validate final mapping
+data.frame(Species = labels_phylo_Global, Color = labels_colors_phylo)
 
-labels_colors(dendro_meta_phylo)<-labels_phylo_Global
-labels_colors(dendro_meta_bray)<-labels_bray_Global
-colorCodes[groupCodes][order.dendrogram(dend)]
-
-
+continent_legend <- c("Severní Amerika", "Evropa", "Asie", "Austrálie", "Více kontinentů") # czech legend labels
+legend_colors <- unname(continent_colors)
 
 plot(dendro_meta_phylo, horiz=T)
+svg("dendrogram_plot_small.svg", width = 30, height = 30) # save as svg
 
 tanglegram(dendro_meta_phylo,dendro_meta_bray,
            common_subtrees_color_lines = TRUE,
@@ -468,11 +476,21 @@ tanglegram(dendro_meta_phylo,dendro_meta_bray,
              margin_outer=3,
              lwd=3,
            columns_width=c(5,2,5),
-             main_left="Phylogeny",
-             main_right="Bray-Curtis",
-             hang=F)%>%
+             main_left="Fylogeneze",
+             main_right="Bray-Curtis gildy",
+             hang=F, axes=F)%>%
   entanglement()# lower entanglement = better readability
-
+legend("bottomleft", 
+       legend = continent_legend,  
+       col = legend_colors,  
+       pch = 19,  # Solid circle
+       bty = "n",  # No border box for cleaner look
+       pt.cex = 2, cex = 1.6,  # Adjust point & text size
+       text.col = "black",  
+       horiz = FALSE,
+       title = "Barvy druhů dle výskytu",
+       inset = c(0, 0.05))
+dev.off()
 
 mantel_Global_P_G1 <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
 print("Results of Mantel test between Bray-Curtis Guilds and Phylogeny")
