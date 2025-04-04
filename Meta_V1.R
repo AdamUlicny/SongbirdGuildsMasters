@@ -34,6 +34,9 @@ method_substrate_meta <- method_substrate_meta %>%
   mutate(N_BEH = sum(c_across(4:9)),
          N_SUB = sum(c_across(10:14)))
 
+method_substrate_meta%>%
+  pull(Sp_eBird)%>%
+  unique()
 # filtering out non-passerines
 method_substrate_meta<-method_substrate_meta%>%
   filter(Order=="PASSERIFORMES")
@@ -44,6 +47,12 @@ method_substrate_subset<-method_substrate_meta%>%
   summarise(across(where(is.numeric), sum, na.rm = F))%>%
   filter(N_BEH >= 30  & N_SUB >= 30) # current arbitrary criteria for inclusion in the analysis
 
+method_substrate_subset%>% # number of foraging actions in subset
+  summarise(sum(N_BEH))
+
+method_substrate_subset%>%
+  pull(Sp_eBird)%>%
+  unique()
 
 method_substrate_continents<-method_substrate_meta%>%
   group_by(continent,Sp_eBird)%>%
@@ -467,7 +476,6 @@ legend_colors <- unname(continent_colors)
 
 plot(dendro_meta_phylo, horiz=T)
 svg("dendrogram_plot_small.svg", width = 30, height = 30) # save as svg
-
 tanglegram(dendro_meta_phylo,dendro_meta_bray,
            common_subtrees_color_lines = TRUE,
              highlight_distinct_edges  = FALSE,
@@ -642,65 +650,80 @@ mantel_North_America_P_M <- mantel(dist_morpho_North_America, phylo_North_Americ
 mantel_North_America_M_G1 <- mantel(dist_morpho_North_America, dist_Bray_North_America, method = "spearman", permutations = 999)
 
 ############### Network graphs #########################
-
+# REWORK THIS PART ACCORDING TO MANTEL_GRAPH.R
 ###################### Global Mantel Graph ####################################
+# Sample nodes data
 nodes <- data.frame(
-  id = c("Phylogeny", "Morphology", "Guilds Bray"),
-  x = c(0, -0.5, 0.5),  # X-coordinates (adjust to keep symmetry)
-  y = c(0.5, -0.5, -0.5)  # Y-coordinates (equilateral triangle)
+  id = c("Fylogeneze", "Morfologie", "Gildy"),
+  x = c(0, -0.3, 0.3),  # X-coordinates (adjust to keep symmetry)
+  y = c(0.4, -0.3, -0.3)  # Y-coordinates (equilateral triangle)
 )
-
-nodes2 <- data.frame(
-  id = c("Phylogeny", "Morphology", "Guilds Gower"),
-  x = c(0, -0.5, 0.5),  # X-coordinates (adjust to keep symmetry)
-  y = c(0.5, -0.5, -0.5)  # Y-coordinates (equilateral triangle)
-)
-
+# Sample edges data with constant edge width
 edges <- data.frame(
-  from = c("Phylogeny", "Morphology", "Guilds Bray"),
-  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  from = c("Fylogeneze", "Morfologie", "Gildy"),
+  to = c("Gildy", "Fylogeneze", "Morfologie"),
   weight = c(mantel_Global_P_G1[["statistic"]], mantel_Global_P_M[["statistic"]], mantel_Global_M_G1[["statistic"]])
 )
 
-triangle_graph_Global1 <- graph_from_data_frame(edges, vertices = nodes, directed = FALSE)
-
-ggraph(triangle_graph_Global1, layout = "manual", x = nodes$x, y = nodes$y) + 
-  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
-                 color = "darkkhaki", edge_alpha = 0.8, 
-                 label_size = 5, show.legend = FALSE) +
-  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
-  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
-  theme_void() +  # Remove background
-  ggtitle("Network of Correlations between Global Guilds, Phylogeny and Morphology")
+# Define positions for a closer equilateral triangle
+positions <- data.frame(
+  name = c("Fylogeneze", "Morfologie", "Gildy"),
+  x = c(0, -0.4, 0.4),  # Adjusting positions
+  y = c(0.5, -0.25, -0.25)
+)
 
 
+# Merge positions with edges
+df_edges <- merge(edges, positions, by.x = "from", by.y = "name")
+df_edges <- merge(df_edges, positions, by.x = "to", by.y = "name", suffixes = c("_from", "_to"))
+
+# Compute midpoint positions for edge labels
+df_edges$label_x <- (df_edges$x_from + df_edges$x_to) / 2
+df_edges$label_y <- (df_edges$y_from + df_edges$y_to) / 2
+
+# Plot using ggplot
+par(mar = c(5, 5, 5, 5))
+svg("mantel_graph_global.svg", width = 30, height = 30)
+ggplot() +
+  theme_void() +
+  geom_segment(data = df_edges, aes(x = x_from, y = y_from, xend = x_to, yend = y_to, size = weight), color = "gray", show.legend = F) +
+  geom_point(data = positions, aes(x = x, y = y), color = c("lightblue", "lightgreen", "lightcoral"), size = 50) +
+  geom_text(data = positions, aes(x = x, y = y, label = name), color = "black", fontface = "bold", size = 5) +  # Labels inside nodes
+  geom_text(data = df_edges, aes(x = label_x, y = label_y, label = round(weight, 3)), color = "black", size = 6) +  # Edge weight labels
+  scale_size_continuous(range = c(1, 5))+
+  xlim(min(positions$x) - 0.3, max(positions$x) + 0.3) + # Adjust x limits
+  ylim(min(positions$y) - 0.3, max(positions$y) + 0.3) + # Adjust y limits
+  coord_fixed(ratio = 1) # Ensure a square aspect ratio
+dev.off()
 
 
 ##################### Asia Mantel Graph #############################
 edges_Asia <- data.frame(
-  from = c("Phylogeny", "Morphology", "Guilds Bray"),
-  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  from = c("Fylogeneze", "Morfologie", "Gildy"),
+  to = c("Gildy", "Fylogeneze", "Morfologie"),
   weight = c(mantel_Asia_P_G1[["statistic"]], mantel_Asia_P_M[["statistic"]], mantel_Asia_M_G1[["statistic"]])
 )
 
 triangle_graph_Asia <- graph_from_data_frame(edges_Asia, vertices = nodes, directed = FALSE)
 
+svg("mantel_graph_asia.svg", width = 30, height = 30)
 ggraph(triangle_graph_Asia, layout = "manual", x = nodes$x, y = nodes$y) + 
-  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
-                 color = "darkkhaki", edge_alpha = 0.8, 
-                 label_size = 5, show.legend = FALSE) +
-  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
-  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  xlim(-1, 1) + ylim(-1, 1) +
+  geom_edge_link(aes(width = weight, label = round(weight, 3)),  # Use the rescaled edge width
+                 color = "darkorange", edge_alpha = 0.8, 
+                 label_size = 5, show.legend = FALSE, 
+                 lineend = "round") +  # Rounded edge ends
+  geom_node_point(size = 50, color = "cyan4", shape = 21, fill = "lightblue", stroke = 2) +  # Bigger nodes with border
+  geom_node_text(aes(label = name), size = 6, color = "black", vjust = 0, hjust = 0.5) +  # Adjust label position
+  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
   theme_void() +  # Remove background
-  ggtitle("Asia")
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "darkblue"))
+dev.off()
 
 ######################## Australia Mantel Graph #############################
 
 edges_Australia <- data.frame(
-  from = c("Phylogeny", "Morphology", "Guilds Bray"),
-  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  from = c("Fylogeneze", "Morfologie", "Gildy"),
+  to = c("Gildy", "Fylogeneze", "Morfologie"),
   weight = c(mantel_Australia_P_G1[["statistic"]], mantel_Australia_P_M[["statistic"]], mantel_Australia_M_G1[["statistic"]])
 )
 
@@ -720,8 +743,8 @@ ggraph(triangle_graph_Australia, layout = "manual", x = nodes$x, y = nodes$y) +
 #################### Europe Mantel Graph #############################
 
 edges_Europe <- data.frame(
-  from = c("Phylogeny", "Morphology", "Guilds Bray"),
-  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  from = c("Fylogeneze", "Morfologie", "Gildy"),
+  to = c("Gildy", "Fylogeneze", "Morfologie"),
   weight = c(mantel_Europe_P_G1[["statistic"]], mantel_Europe_P_M[["statistic"]], mantel_Europe_M_G1[["statistic"]])
 )
 
@@ -741,8 +764,8 @@ ggraph(triangle_graph_Europe, layout = "manual", x = nodes$x, y = nodes$y) +
 ####################### North America Mantel Graph ############################
 
 edges_North_America <- data.frame(
-  from = c("Phylogeny", "Morphology", "Guilds Bray"),
-  to = c("Guilds Bray", "Phylogeny", "Morphology"),
+  from = c("Fylogeneze", "Morfologie", "Gildy"),
+  to = c("Gildy", "Fylogeneze", "Morfologie"),
   weight = c(mantel_North_America_P_G1[["statistic"]], mantel_North_America_P_M[["statistic"]], mantel_North_America_M_G1[["statistic"]])
 )
 
