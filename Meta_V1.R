@@ -64,8 +64,9 @@ method_substrate_continents<-method_substrate_meta%>%
 sp<-method_substrate_subset%>%
   pull(Sp_eBird)
 
-phylo_meta <-extractTree(species=sp,
+phylo_meta <-clootl::extractTree(species=sp,
                          taxonomy_year=2021, version="1.4")
+
 phylo_citations<-getCitations(tree=phylo_meta)
 write.csv(phylo_citations, "resources/phylo_citations.csv")
 
@@ -475,7 +476,7 @@ continent_legend <- c("Severní Amerika", "Evropa", "Asie", "Austrálie", "Více
 legend_colors <- unname(continent_colors)
 
 plot(dendro_meta_phylo, horiz=T)
-svg("dendrogram_plot_small.svg", width = 30, height = 30) # save as svg
+#svg("dendrogram_plot_small.svg", width = 30, height = 30) # save as svg
 tanglegram(dendro_meta_phylo,dendro_meta_bray,
            common_subtrees_color_lines = TRUE,
              highlight_distinct_edges  = FALSE,
@@ -498,7 +499,7 @@ legend("bottomleft",
        horiz = FALSE,
        title = "Barvy druhů dle výskytu",
        inset = c(0, 0.05))
-dev.off()
+#dev.off()
 
 mantel_Global_P_G1 <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
 print("Results of Mantel test between Bray-Curtis Guilds and Phylogeny")
@@ -570,6 +571,7 @@ dendro_North_America_bray_step1side<-untangle(dendro_North_America_bray, dendro_
 dendro_North_America_morpho_step1side<-untangle(dendro_North_America_morpho, dendro_North_America_phylo, method = "step1side")# untangle morphology
 
 #### Asia
+svg("Asia_dendrogram.svg", width = 10, height = 10) # save as svg
 tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -579,17 +581,22 @@ tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            margin_outer=3,
            columns_width=c(5,1,5),
            lwd=2.5,
-           main_left="Phylogeny",
-           main_right="Bray-Curtis",
-           main="Asia",
-           hang=F)%>%
+           main_left="Fylogeneze",
+           main_right="Gildy",
+           main="Asie",
+           hang=F, axes = F)%>%
   entanglement()
+dev.off() 
+
+
 mantel_Asia_P_G1 <- mantel(dist_Bray_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
 print(mantel_Asia_P_G1)
 mantel_Asia_P_M <- mantel(dist_morpho_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
+print(mantel_Asia_P_M)
 mantel_Asia_M_G1 <- mantel(dist_morpho_Asia, dist_Bray_Asia, method = "spearman", permutations = 999)
-
+print(mantel_Asia_M_G1)
 #### Australia
+svg("Australia_dendrogram.svg", width = 10, height = 12)
 tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -599,17 +606,22 @@ tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
            margin_outer=5,
            columns_width=c(5,1,5),
            lwd=2.5,
-           main_left="Phylogeny",
-           main_right="Bray-Curtis",
-           main="Asia",
-           hang=F)%>%
-  entanglement() # lower entanglement = better readability
+           main_left="Fylogeneze",
+           main_right="Gildy",
+           main="Austrálie",
+           hang=F, axes=F)%>%
+  entanglement() 
+dev.off() # lower entanglement = better readability
+
 mantel_Australia_P_G1 <- mantel(dist_Bray_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
 print(mantel_Australia_P_G1)
 mantel_Australia_P_M <- mantel(dist_morpho_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
+print(mantel_Australia_P_M)
 mantel_Australia_M_G1 <- mantel(dist_morpho_Australia, dist_Bray_Australia, method = "spearman", permutations = 999)
+print(mantel_Australia_M_G1)
 
 #### Europe
+svg("Europe_dendrogram.svg", width = 10, height = 6)
 tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -619,17 +631,22 @@ tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
            margin_outer=5,
            columns_width=c(5,1,5),
            lwd=2.5,
-           main_left="Phylogeny",
-           main_right="Bray-Curtis",
-           main="Asia",
-           hang=F)%>%
+           main_left="Fylogeneze",
+           main_right="Gildy",
+           main="Evropa",
+           hang=F, axes=F)%>%
   entanglement()# lower entanglement = better readability
+dev.off()
+
 mantel_Europe_P_G1 <- mantel(dist_Bray_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
 print(mantel_Europe_P_G1)
 mantel_Europe_P_M <- mantel(dist_morpho_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
+print(mantel_Europe_P_M)
 mantel_Europe_M_G1 <- mantel(dist_morpho_Europe, dist_Bray_Europe, method = "spearman", permutations = 999)
+print(mantel_Europe_M_G1)
 
 #### North America
+svg("North_America_dendrogram.svg", width = 10, height = 8)
 tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -639,16 +656,18 @@ tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
            margin_outer=5,
            columns_width=c(5,1,5),
            lwd=2.5,
-           main_left="Phylogeny",
-           main_right="Bray-Curtis",
-           main="Asia",
-           hang=F)%>%
+           main_left="Fylogeneze",
+           main_right="Gildy",
+           main="Severní Amerika",
+           hang=F, axes = F)%>%
   entanglement() # lower entanglement = better readability
+dev.off()
 mantel_North_America_P_G1 <- mantel(dist_Bray_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
 print(mantel_North_America_P_G1)
 mantel_North_America_P_M <- mantel(dist_morpho_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
+print(mantel_North_America_P_M)
 mantel_North_America_M_G1 <- mantel(dist_morpho_North_America, dist_Bray_North_America, method = "spearman", permutations = 999)
-
+print(mantel_North_America_M_G1)
 ############### Network graphs #########################
 # REWORK THIS PART ACCORDING TO MANTEL_GRAPH.R
 ###################### Global Mantel Graph ####################################

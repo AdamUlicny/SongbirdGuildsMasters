@@ -12,21 +12,15 @@ positions <- data.frame(
   # You could make y = c(0.5, -0.25, -0.25) for a perfect equilateral triangle
 )
 
-# --- Data Preparation ---
 
-# !! REPLACE THESE WITH YOUR ACTUAL MANTEL STATISTIC VALUES !!
-# Placeholder Mantel test statistics (replace with your actual data)
-mantel_Global_P_G1 <- list(statistic = 0.149) # Example value
-mantel_Global_P_M  <- list(statistic = 0.110) # Example value
-mantel_Global_M_G1 <- list(statistic = 0.091) # Example value
 
 # Define Edges connecting the nodes
 edges <- data.frame(
   from = c("Fylogeneze", "Morfologie", "Gildy"),
   to = c("Gildy", "Fylogeneze", "Morfologie"),
-  weight = c(mantel_Australia_P_G1[["statistic"]],
-             mantel_Australia_P_M[["statistic"]],
-             mantel_Australia_M_G1[["statistic"]])
+  weight = c(mantel_Europe_P_G1[["statistic"]],
+             mantel_Europe_P_M[["statistic"]],
+             mantel_Europe_M_G1[["statistic"]])
 )
 
 # Merge node positions with edge data to get coordinates for geom_segment
@@ -91,7 +85,7 @@ gg_mantel <- ggplot() +
 # --- Save the Plot ---
 
 # Save the plot as an SVG file with REASONABLE dimensions
-svg("mantel_graph_North_America.svg", width = 7, height = 7) # REDUCED dimensions
+svg("mantel_graph_Europe.svg", width = 7, height = 7) # REDUCED dimensions
 print(gg_mantel)
 dev.off()
 
