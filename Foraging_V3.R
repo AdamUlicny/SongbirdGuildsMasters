@@ -578,7 +578,7 @@ matrix_cz_prop <-method_substrate_cz%>%
 trait_labels<-c("Glean", "Probe", "Hang-glean", "Manipulation", "Hover-snatch", "Flycatch", "Snatch", "Pounce", "Kůra", "Listy", "Půda", "Vzduch", "Ostatní")
 
 traits_cz <- phylo4d( x=dendro_bray_traits, tip.data=matrix_cz_prop )
-dev.off()
+
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=1, cex.label=0.6, cex.legend=0.8, col = "red", var.label=trait_labels, main="")
 
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds CZ")

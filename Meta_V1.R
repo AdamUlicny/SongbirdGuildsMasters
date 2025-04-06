@@ -571,7 +571,7 @@ dendro_North_America_bray_step1side<-untangle(dendro_North_America_bray, dendro_
 dendro_North_America_morpho_step1side<-untangle(dendro_North_America_morpho, dendro_North_America_phylo, method = "step1side")# untangle morphology
 
 #### Asia
-svg("Asia_dendrogram.svg", width = 10, height = 10) # save as svg
+#svg("Asia_dendrogram.svg", width = 10, height = 10) # save as svg
 tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -586,7 +586,7 @@ tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            main="Asie",
            hang=F, axes = F)%>%
   entanglement()
-dev.off() 
+#dev.off() 
 
 
 mantel_Asia_P_G1 <- mantel(dist_Bray_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
@@ -596,7 +596,7 @@ print(mantel_Asia_P_M)
 mantel_Asia_M_G1 <- mantel(dist_morpho_Asia, dist_Bray_Asia, method = "spearman", permutations = 999)
 print(mantel_Asia_M_G1)
 #### Australia
-svg("Australia_dendrogram.svg", width = 10, height = 12)
+#svg("Australia_dendrogram.svg", width = 10, height = 12)
 tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -611,7 +611,7 @@ tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
            main="Austrálie",
            hang=F, axes=F)%>%
   entanglement() 
-dev.off() # lower entanglement = better readability
+#dev.off() # lower entanglement = better readability
 
 mantel_Australia_P_G1 <- mantel(dist_Bray_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
 print(mantel_Australia_P_G1)
@@ -621,7 +621,7 @@ mantel_Australia_M_G1 <- mantel(dist_morpho_Australia, dist_Bray_Australia, meth
 print(mantel_Australia_M_G1)
 
 #### Europe
-svg("Europe_dendrogram.svg", width = 10, height = 6)
+#svg("Europe_dendrogram.svg", width = 10, height = 6)
 tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -636,7 +636,7 @@ tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
            main="Evropa",
            hang=F, axes=F)%>%
   entanglement()# lower entanglement = better readability
-dev.off()
+#dev.off()
 
 mantel_Europe_P_G1 <- mantel(dist_Bray_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
 print(mantel_Europe_P_G1)
@@ -646,7 +646,7 @@ mantel_Europe_M_G1 <- mantel(dist_morpho_Europe, dist_Bray_Europe, method = "spe
 print(mantel_Europe_M_G1)
 
 #### North America
-svg("North_America_dendrogram.svg", width = 10, height = 8)
+#svg("North_America_dendrogram.svg", width = 10, height = 8)
 tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
            common_subtrees_color_lines = TRUE,
            center=T,
@@ -661,7 +661,7 @@ tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
            main="Severní Amerika",
            hang=F, axes = F)%>%
   entanglement() # lower entanglement = better readability
-dev.off()
+#dev.off()
 mantel_North_America_P_G1 <- mantel(dist_Bray_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
 print(mantel_North_America_P_G1)
 mantel_North_America_P_M <- mantel(dist_morpho_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
@@ -671,135 +671,7 @@ print(mantel_North_America_M_G1)
 ############### Network graphs #########################
 # REWORK THIS PART ACCORDING TO MANTEL_GRAPH.R
 ###################### Global Mantel Graph ####################################
-# Sample nodes data
-nodes <- data.frame(
-  id = c("Fylogeneze", "Morfologie", "Gildy"),
-  x = c(0, -0.3, 0.3),  # X-coordinates (adjust to keep symmetry)
-  y = c(0.4, -0.3, -0.3)  # Y-coordinates (equilateral triangle)
-)
-# Sample edges data with constant edge width
-edges <- data.frame(
-  from = c("Fylogeneze", "Morfologie", "Gildy"),
-  to = c("Gildy", "Fylogeneze", "Morfologie"),
-  weight = c(mantel_Global_P_G1[["statistic"]], mantel_Global_P_M[["statistic"]], mantel_Global_M_G1[["statistic"]])
-)
 
-# Define positions for a closer equilateral triangle
-positions <- data.frame(
-  name = c("Fylogeneze", "Morfologie", "Gildy"),
-  x = c(0, -0.4, 0.4),  # Adjusting positions
-  y = c(0.5, -0.25, -0.25)
-)
-
-
-# Merge positions with edges
-df_edges <- merge(edges, positions, by.x = "from", by.y = "name")
-df_edges <- merge(df_edges, positions, by.x = "to", by.y = "name", suffixes = c("_from", "_to"))
-
-# Compute midpoint positions for edge labels
-df_edges$label_x <- (df_edges$x_from + df_edges$x_to) / 2
-df_edges$label_y <- (df_edges$y_from + df_edges$y_to) / 2
-
-# Plot using ggplot
-par(mar = c(5, 5, 5, 5))
-svg("mantel_graph_global.svg", width = 30, height = 30)
-ggplot() +
-  theme_void() +
-  geom_segment(data = df_edges, aes(x = x_from, y = y_from, xend = x_to, yend = y_to, size = weight), color = "gray", show.legend = F) +
-  geom_point(data = positions, aes(x = x, y = y), color = c("lightblue", "lightgreen", "lightcoral"), size = 50) +
-  geom_text(data = positions, aes(x = x, y = y, label = name), color = "black", fontface = "bold", size = 5) +  # Labels inside nodes
-  geom_text(data = df_edges, aes(x = label_x, y = label_y, label = round(weight, 3)), color = "black", size = 6) +  # Edge weight labels
-  scale_size_continuous(range = c(1, 5))+
-  xlim(min(positions$x) - 0.3, max(positions$x) + 0.3) + # Adjust x limits
-  ylim(min(positions$y) - 0.3, max(positions$y) + 0.3) + # Adjust y limits
-  coord_fixed(ratio = 1) # Ensure a square aspect ratio
-dev.off()
-
-
-##################### Asia Mantel Graph #############################
-edges_Asia <- data.frame(
-  from = c("Fylogeneze", "Morfologie", "Gildy"),
-  to = c("Gildy", "Fylogeneze", "Morfologie"),
-  weight = c(mantel_Asia_P_G1[["statistic"]], mantel_Asia_P_M[["statistic"]], mantel_Asia_M_G1[["statistic"]])
-)
-
-triangle_graph_Asia <- graph_from_data_frame(edges_Asia, vertices = nodes, directed = FALSE)
-
-svg("mantel_graph_asia.svg", width = 30, height = 30)
-ggraph(triangle_graph_Asia, layout = "manual", x = nodes$x, y = nodes$y) + 
-  geom_edge_link(aes(width = weight, label = round(weight, 3)),  # Use the rescaled edge width
-                 color = "darkorange", edge_alpha = 0.8, 
-                 label_size = 5, show.legend = FALSE, 
-                 lineend = "round") +  # Rounded edge ends
-  geom_node_point(size = 50, color = "cyan4", shape = 21, fill = "lightblue", stroke = 2) +  # Bigger nodes with border
-  geom_node_text(aes(label = name), size = 6, color = "black", vjust = 0, hjust = 0.5) +  # Adjust label position
-  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
-  theme_void() +  # Remove background
-  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "darkblue"))
-dev.off()
-
-######################## Australia Mantel Graph #############################
-
-edges_Australia <- data.frame(
-  from = c("Fylogeneze", "Morfologie", "Gildy"),
-  to = c("Gildy", "Fylogeneze", "Morfologie"),
-  weight = c(mantel_Australia_P_G1[["statistic"]], mantel_Australia_P_M[["statistic"]], mantel_Australia_M_G1[["statistic"]])
-)
-
-triangle_graph_Australia <- graph_from_data_frame(edges_Australia, vertices = nodes, directed = FALSE)
-
-ggraph(triangle_graph_Australia, layout = "manual", x = nodes$x, y = nodes$y) + 
-  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
-                 color = "darkkhaki", edge_alpha = 0.8, 
-                 label_size = 5, show.legend = FALSE) +
-  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
-  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  scale_edge_width(range = c(1, 10)) +
-  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
-  theme_void() +  # Remove background
-  ggtitle("Australia")
-
-#################### Europe Mantel Graph #############################
-
-edges_Europe <- data.frame(
-  from = c("Fylogeneze", "Morfologie", "Gildy"),
-  to = c("Gildy", "Fylogeneze", "Morfologie"),
-  weight = c(mantel_Europe_P_G1[["statistic"]], mantel_Europe_P_M[["statistic"]], mantel_Europe_M_G1[["statistic"]])
-)
-
-triangle_graph_Europe <- graph_from_data_frame(edges_Europe, vertices = nodes, directed = FALSE)
-
-ggraph(triangle_graph_Europe, layout = "manual", x = nodes$x, y = nodes$y) + 
-  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
-                 color = "darkkhaki", edge_alpha = 0.8, 
-                 label_size = 5, show.legend = FALSE) +
-  geom_node_point(size = 40, color = "cyan4") +  # Bigger nodes
-  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  scale_edge_width(range = c(1, 20)) +
-  xlim(-1, 1) + ylim(-1, 1) + # Adjust edge width scaling
-  theme_void() +  # Remove background
-  ggtitle("Europe")
-
-####################### North America Mantel Graph ############################
-
-edges_North_America <- data.frame(
-  from = c("Fylogeneze", "Morfologie", "Gildy"),
-  to = c("Gildy", "Fylogeneze", "Morfologie"),
-  weight = c(mantel_North_America_P_G1[["statistic"]], mantel_North_America_P_M[["statistic"]], mantel_North_America_M_G1[["statistic"]])
-)
-
-triangle_graph_North_America <- graph_from_data_frame(edges_North_America, vertices = nodes, directed = FALSE)
-
-ggraph(triangle_graph_North_America, layout = "manual", x = nodes$x, y = nodes$y) + 
-  geom_edge_link(aes(width = weight, label = round(weight, 3)), 
-                 color = "darkkhaki", edge_alpha = 0.8, 
-                 label_size = 5, show.legend = FALSE) +
-  geom_node_point(size = 40, color = "cyan4") +  # Node size
-  geom_node_text(aes(label = name), size = 5, color = "black") +  # Labels inside nodes
-  scale_edge_width(range = c(1, 10)) +
-  xlim(-1, 1) + ylim(-1, 1) + 
-  theme_void() +
-  ggtitle("North_America")
 
 ##################################### Guild visualization Global #######################################################
 
@@ -836,6 +708,130 @@ gridplot.phylo4d(traits_Europe, tree.ladderize=T, center=F, scale=F, tree.type="
 
 gridplot.phylo4d(traits_North_America, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds North America", cex.main=1.2, cell.col = white2red(200))
 
+####################### Calculating specialization #######################
+calculate_index_wide <- function(data, prop_columns, n_categories = 5) {
+  # Store the original rownames
+  original_rownames <- rownames(data)
+  
+  # Calculate indices
+  result <- data %>%
+    rowwise() %>%
+    mutate(
+      B = 1 / sum((c_across(all_of(prop_columns)))^2, na.rm = TRUE),
+      Ba = 1 - (B - 1) / (n_categories - 1)
+    ) %>%
+    ungroup()%>%
+    select(Ba, B)
+  
+  # Restore original rownames
+  rownames(result) <- original_rownames
+  
+  return(result)
+}
+
+specialization_global_method<-calculate_index_wide(matrix_Global_prop,1:6 , n_categories = 6)%>%
+  rename(BaM=Ba, BM=B)%>%
+  rownames_to_column("Sp_eBird")
+
+specialization_global_substrate<-calculate_index_wide(matrix_Global_prop,7:11 , n_categories = 5)%>%
+  rename(BaS=Ba, BS=B)%>%
+  rownames_to_column("Sp_eBird")
+
+#left join by sp_eBird
+specialization_method_substrate <- left_join(specialization_global_substrate, specialization_global_method, by="Sp_eBird")%>%
+  mutate(continent = species_to_continent[Sp_eBird])%>%
+  filter(continent!="Multiple")
+
+continent_labels <- c(
+  "Australia" = "Austrálie",
+  "Europe" = "Evropa",
+  "North_America" = "Severní Amerika",
+  "Asia" = "Asie"
+)
+
+# scatterplot of BaS and BaM with color codes based on continent
+#svg("specialization_method_substrate.svg", width = 10, height = 10) # save as svg
+ggplot(specialization_method_substrate, aes(x=BaM, y=BaS, color=continent)) +
+  geom_point(size=5) +
+  scale_color_manual(values = continent_colors, labels=continent_labels) +
+  labs(title="",
+       x="Specializace na metodu",
+       y="Specializace na substrát") +
+  theme_classic()  +
+  scale_x_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +  
+  scale_y_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1))  +
+  theme(text=element_text(size=18),axis.title = element_text(size = 20), axis.text.x = element_text(color="black"), axis.text.y = element_text(color="black"))+
+  theme(legend.position = "bottom") +
+  geom_smooth(method = "lm", se = F, size = 2, aes(group=continent)) + 
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  
+  guides( color = guide_legend(title = "Kontinenty:"))
+#dev.off()
+
+# table of average BaS and BaM per continent
+specialization_method_substrate %>%
+  group_by(continent) %>%
+  summarise(
+    mean_BaM = mean(BaM, na.rm = TRUE),
+    mean_BaS = mean(BaS, na.rm = TRUE)
+  ) %>%
+  arrange(desc(mean_BaM))
+
+# Kruskall - Wallis
+kruskal.test(BaM ~ continent, data = specialization_method_substrate)
+# p<0,05
+kruskal.test(BaS ~ continent, data = specialization_method_substrate)
+#p>0.05
+
+# Dunn's test for post-hoc analysis BaM 
+library(dunn.test)
+dunn.test(specialization_method_substrate$BaM, specialization_method_substrate$continent,
+         method = "bonferroni")  # or "holm" or "BH" for p-value adjustment
+
+library(ggpubr)
+ggplot(specialization_method_substrate, aes(x = continent, y = BaM, color = continent)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Boxplot of Method Specialization (BaM) by Continent",
+       x = "Continent", y = "Method Specialization (BaM)") +
+  scale_color_manual(labels=continent_labels) +
+  stat_compare_means(method = "kruskal.test")  #
+
+##################################### random visuals #################
+pcoa_bray <- pcoa(dist_Bray_Global)
+coords <- as.data.frame(pcoa_bray$vectors[, 1:3])
+colnames(coords) <- c("PCo1", "PCo2", "PCo3")
+k <- 7
+coords$cluster <- cutree(dendro_meta_bray, k = k)
+library(plotly)
+
+plot_ly(
+  data = coords,
+  x = ~PCo1, y = ~PCo2, z = ~PCo3,
+  color = ~as.factor(cluster),
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(size = 4)
+) %>%
+  layout(
+    scene = list(
+      xaxis = list(title = "PCo1"),
+      yaxis = list(title = "PCo2"),
+      zaxis = list(title = "PCo3")
+    )
+  )
+
+library(rgl)
+cluster_colors <- rainbow(length(unique(coords$cluster)))[coords$cluster]
+
+plot3d(
+  coords$PCo1, coords$PCo2, coords$PCo3,
+  col = cluster_colors,
+  size = 2,
+  type = "s",
+  xlab = "PCo1", ylab = "PCo2", zlab = "PCo3"
+)
+
+summary(pcoa_bray)
 
 
-
+########## 
