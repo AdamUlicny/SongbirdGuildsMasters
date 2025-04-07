@@ -20,7 +20,7 @@ library(adephylo)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Load the data
-method_substrate_meta <- read.csv("data/method_substrate_meta.csv") # behavioral data
+method_substrate_meta <- read.csv("data/method_substrate_meta.csv") # Behavioral data
 
 morphology <- read_xlsx("resources/AVONET/AVONET Supplementary dataset 1.xlsx", sheet = "AVONET2_eBird") # AVONET morphology
 
@@ -53,6 +53,10 @@ method_substrate_subset%>% # number of foraging actions in subset
 method_substrate_subset%>%
   pull(Sp_eBird)%>%
   unique()
+
+passeriformes_meta%>%
+  group_by(continent)%>%
+  count()
 
 method_substrate_continents<-method_substrate_meta%>%
   group_by(continent,Sp_eBird)%>%
