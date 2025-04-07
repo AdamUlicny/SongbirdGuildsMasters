@@ -18,9 +18,9 @@ positions <- data.frame(
 edges <- data.frame(
   from = c("Fylogeneze", "Morfologie", "Gildy"),
   to = c("Gildy", "Fylogeneze", "Morfologie"),
-  weight = c(mantel_Europe_P_G1[["statistic"]],
-             mantel_Europe_P_M[["statistic"]],
-             mantel_Europe_M_G1[["statistic"]])
+  weight = c(mantel_Asia_P_G1[["statistic"]],
+             mantel_Asia_P_M[["statistic"]],
+             mantel_Asia_M_G1[["statistic"]])
 )
 
 # Merge node positions with edge data to get coordinates for geom_segment
@@ -85,7 +85,7 @@ gg_mantel <- ggplot() +
 # --- Save the Plot ---
 
 # Save the plot as an SVG file with REASONABLE dimensions
-svg("mantel_graph_Europe.svg", width = 7, height = 7) # REDUCED dimensions
+svg("mantel_graph_Asia.svg", width = 7, height = 7) 
 print(gg_mantel)
 dev.off()
 
