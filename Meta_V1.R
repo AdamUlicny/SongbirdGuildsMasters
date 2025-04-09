@@ -54,10 +54,6 @@ method_substrate_subset%>%
   pull(Sp_eBird)%>%
   unique()
 
-passeriformes_meta%>%
-  group_by(continent)%>%
-  count()
-
 method_substrate_continents<-method_substrate_meta%>%
   group_by(continent,Sp_eBird)%>%
   summarise(across(where(is.numeric), sum, na.rm = F))%>%
@@ -466,10 +462,31 @@ data.frame(Species = labels_phylo_Global, Color = labels_colors_phylo)
 continent_legend <- c("Severní Amerika", "Evropa", "Asie", "Austrálie", "Více kontinentů") # czech legend labels
 legend_colors <- unname(continent_colors)
 
+#### Colored lines based on guild (clusters)
+clusters <- cutree(dendro_meta_bray, k = 6)
+
+bray_order <- labels(dendro_meta_bray)
+
+cluster_df <- data.frame(
+  label = names(clusters),
+  cluster = clusters
+)
+
+cluster_df <- cluster_df[match(bray_order, cluster_df$label), ]
+
+cluster_colors <- brewer.pal(6, "Set2")    
+
+label_colors <- cluster_colors[cluster_df$cluster]
+names(label_colors) <- cluster_df$label
+
+phylo_order <-(labels(dendro_meta_phylo))
+
+final_colors <- label_colors[match(phylo_order, names(label_colors))]
+
 plot(dendro_meta_phylo, horiz=T)
 svg("dendrogram_plot_small.svg", width = 30, height = 30) # save as svg
 tanglegram(dendro_meta_phylo,dendro_meta_bray,
-           common_subtrees_color_lines = TRUE,
+           color_lines = final_colors,
              highlight_distinct_edges  = FALSE,
              highlight_branches_lwd=FALSE,
              margin_inner=12.5,
@@ -541,25 +558,54 @@ print(mantel_Global_M_G1)
 
 ######################## Per-Continent Codendrograms ################################
 # prepare the dendrograms
-dendro_Asia_phylo<-ladderize(dendro_Asia_phylo)# ladderized phylogeny (ape)
+dendro_Asia_phylo<-dendextend::ladderize(dendro_Asia_phylo)# ladderized phylogeny (ape)
 dendro_Asia_bray_step1side<-untangle(dendro_Asia_bray, dendro_Asia_phylo, method = "step1side")# untangle bray guilds
 dendro_Asia_morpho_step1side<-untangle(dendro_Asia_morpho, dendro_Asia_phylo, method = "step1side")# untangle morphology
 
-dendro_Australia_phylo<-ladderize(dendro_Australia_phylo)# ladderized phylogeny (ape)
+dendro_Australia_phylo<-dendextend::ladderize(dendro_Australia_phylo)# ladderized phylogeny (ape)
 dendro_Australia_bray_step1side<-untangle(dendro_Australia_bray, dendro_Australia_phylo, method = "step1side")# untangle bray guilds
 dendro_Australia_morpho_step1side<-untangle(dendro_Australia_morpho, dendro_Australia_phylo, method = "step1side")# untangle morphology
 
-dendro_Europe_phylo<-ladderize(dendro_Europe_phylo)# ladderized phylogeny (ape)
+dendro_Europe_phylo<-dendextend::ladderize(dendro_Europe_phylo)# ladderized phylogeny (ape)
 dendro_Europe_bray_step1side<-untangle(dendro_Europe_bray, dendro_Europe_phylo, method = "step1side")# untangle bray guilds
 dendro_Europe_morpho_step1side<-untangle(dendro_Europe_morpho, dendro_Europe_phylo, method = "step1side")# untangle
 
-dendro_North_America_phylo<-ladderize(dendro_North_America_phylo)# ladderized phylogeny (ape)
+dendro_North_America_phylo<-dendextend::ladderize(dendro_North_America_phylo)# ladderized phylogeny (ape)
 dendro_North_America_bray_step1side<-untangle(dendro_North_America_bray, dendro_North_America_phylo, method = "step1side")# untangle bray guilds
 dendro_North_America_morpho_step1side<-untangle(dendro_North_America_morpho, dendro_North_America_phylo, method = "step1side")# untangle morphology
 
+ # Coloring guilds
+
+color_cluster<-function(dendro_clusters,dendro_order,n_clusters=4){
+  clusters <- cutree(dendro_clusters, k = n_clusters)
+
+cluster_order <- labels(dendro_clusters)
+
+cluster_df <- data.frame(
+  label = names(clusters),
+  cluster = clusters
+)
+
+cluster_df <- cluster_df[match(cluster_order, cluster_df$label), ]
+cluster_colors <- brewer.pal(n_clusters, "Set2")    
+
+label_colors <- cluster_colors[cluster_df$cluster]
+names(label_colors) <- cluster_df$label
+
+phylo_order <-(labels(dendro_order))
+
+final_colors <- label_colors[match(phylo_order, names(label_colors))]
+return(final_colors)
+}
+
+color_cluster_asia<-color_cluster(dendro_Asia_bray_step1side[[1]], dendro_Asia_phylo, n_clusters=4)
+color_cluster_australia<-color_cluster(dendro_Australia_bray_step1side[[1]], dendro_Australia_phylo, n_clusters=4)
+color_cluster_europe<-color_cluster(dendro_Europe_bray_step1side[[1]], dendro_Europe_phylo, n_clusters=4)
+color_cluster_north_america<-color_cluster(dendro_North_America_bray_step1side[[1]], dendro_North_America_phylo, n_clusters=4)
 #### Asia
 svg("Asia_dendrogram.svg", width = 10, height = 10) # save as svg
 tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
+           color_lines = color_cluster_asia,
            common_subtrees_color_lines = TRUE,
            center=T,
            highlight_distinct_edges = FALSE,
@@ -569,7 +615,7 @@ tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            columns_width=c(5,1,5),
            lwd=2.5,
            main_left="Fylogeneze",
-           main_right="Gildy",
+           main_right="Potravní chování",
            main="Asie",
            hang=F, axes = F)%>%
   entanglement()
@@ -585,7 +631,7 @@ print(mantel_Asia_M_G1)
 #### Australia
 svg("Australia_dendrogram.svg", width = 10, height = 12)
 tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
-           common_subtrees_color_lines = TRUE,
+           color_lines = color_cluster_australia,
            center=T,
            highlight_distinct_edges = FALSE,
            highlight_branches_lwd=FALSE,
@@ -594,7 +640,7 @@ tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
            columns_width=c(5,1,5),
            lwd=2.5,
            main_left="Fylogeneze",
-           main_right="Gildy",
+           main_right="Potravní chování",
            main="Austrálie",
            hang=F, axes=F)%>%
   entanglement() 
@@ -610,7 +656,7 @@ print(mantel_Australia_M_G1)
 #### Europe
 svg("Europe_dendrogram.svg", width = 10, height = 6)
 tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
-           common_subtrees_color_lines = TRUE,
+           color_lines = color_cluster_europe,
            center=T,
            highlight_distinct_edges = FALSE,
            highlight_branches_lwd=FALSE,
@@ -619,7 +665,7 @@ tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
            columns_width=c(5,1,5),
            lwd=2.5,
            main_left="Fylogeneze",
-           main_right="Gildy",
+           main_right="Potravní chování",
            main="Evropa",
            hang=F, axes=F)%>%
   entanglement()# lower entanglement = better readability
@@ -635,7 +681,7 @@ print(mantel_Europe_M_G1)
 #### North America
 svg("North_America_dendrogram.svg", width = 10, height = 8)
 tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
-           common_subtrees_color_lines = TRUE,
+           color_lines = color_cluster_north_america,
            center=T,
            highlight_distinct_edges = FALSE,
            highlight_branches_lwd=FALSE,
@@ -644,7 +690,7 @@ tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
            columns_width=c(5,1,5),
            lwd=2.5,
            main_left="Fylogeneze",
-           main_right="Gildy",
+           main_right="Potravní chování",
            main="Severní Amerika",
            hang=F, axes = F)%>%
   entanglement() # lower entanglement = better readability
