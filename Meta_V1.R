@@ -494,7 +494,7 @@ tanglegram(dendro_meta_phylo,dendro_meta_bray,
              lwd=3,
            columns_width=c(5,2,5),
              main_left="Fylogeneze",
-             main_right="Bray-Curtis gildy",
+             main_right="Potravní chování",
              hang=F, axes=F)%>%
   entanglement()# lower entanglement = better readability
 legend("bottomleft", 
@@ -505,7 +505,7 @@ legend("bottomleft",
        pt.cex = 2, cex = 1.6,  # Adjust point & text size
        text.col = "black",  
        horiz = FALSE,
-       title = "Barvy druhů dle výskytu",
+       title = "Barvy druhových jmen dle výskytu",
        inset = c(0, 0.05))
 dev.off()
 
@@ -598,10 +598,10 @@ final_colors <- label_colors[match(phylo_order, names(label_colors))]
 return(final_colors)
 }
 
-color_cluster_asia<-color_cluster(dendro_Asia_bray_step1side[[1]], dendro_Asia_phylo, n_clusters=4)
-color_cluster_australia<-color_cluster(dendro_Australia_bray_step1side[[1]], dendro_Australia_phylo, n_clusters=4)
-color_cluster_europe<-color_cluster(dendro_Europe_bray_step1side[[1]], dendro_Europe_phylo, n_clusters=4)
-color_cluster_north_america<-color_cluster(dendro_North_America_bray_step1side[[1]], dendro_North_America_phylo, n_clusters=4)
+color_cluster_asia<-color_cluster(dendro_Asia_bray_step1side[[1]], dendro_Asia_phylo, n_clusters=6)
+color_cluster_australia<-color_cluster(dendro_Australia_bray_step1side[[1]], dendro_Australia_phylo, n_clusters=6)
+color_cluster_europe<-color_cluster(dendro_Europe_bray_step1side[[1]], dendro_Europe_phylo, n_clusters=6)
+color_cluster_north_america<-color_cluster(dendro_North_America_bray_step1side[[1]], dendro_North_America_phylo, n_clusters=6)
 #### Asia
 svg("Asia_dendrogram.svg", width = 10, height = 10) # save as svg
 tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
@@ -789,22 +789,51 @@ continent_labels <- c(
   "Asia" = "Asie"
 )
 
+library(lmodel2)
+# Calculate Linear Model type 2 slopes
+regression_lines <- specialization_method_substrate %>%
+  group_by(continent) %>%
+  group_split() %>%
+  map_df(~{
+    model <- lmodel2(BaS ~ BaM, data = .x, nperm = 0)
+    slope <- model$regression.results[2, "Slope"]  # [2,] = MA
+    intercept <- model$regression.results[2, "Intercept"]
+    data.frame(
+      continent = unique(.x$continent),
+      slope = slope,
+      intercept = intercept
+    )
+  })
+
+
+
 # scatterplot of BaS and BaM with color codes based on continent
 svg("specialization_method_substrate.svg", width = 10, height = 10) # save as svg
-ggplot(specialization_method_substrate, aes(x=BaM, y=BaS, color=continent)) +
-  geom_point(size=5) +
-  scale_color_manual(values = continent_colors, labels=continent_labels) +
-  labs(title="",
-       x="Specializace na metodu",
-       y="Specializace na substrát") +
-  theme_classic()  +
-  scale_x_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +  
-  scale_y_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1))  +
-  theme(text=element_text(size=18),axis.title = element_text(size = 20), axis.text.x = element_text(color="black"), axis.text.y = element_text(color="black"))+
+ggplot(specialization_method_substrate, aes(x = BaM, y = BaS, color = continent)) +
+  geom_point(size = 5) +
+  scale_color_manual(values = continent_colors, labels = continent_labels) +
+  labs(
+    title = "",
+    x = "Specializace na metodu",
+    y = "Specializace na substrát"
+  ) +
+  theme_classic() +
+  scale_x_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +
+  scale_y_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +
+  theme(
+    text = element_text(size = 18),
+    axis.title = element_text(size = 20),
+    axis.text.x = element_text(color = "black"),
+    axis.text.y = element_text(color = "black")
+  ) +
   theme(legend.position = "bottom") +
-  geom_smooth(method = "lm", se = F, size = 2, aes(group=continent)) + 
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  
-  guides( color = guide_legend(title = "Kontinenty:"))
+  geom_abline(
+    data = regression_lines,
+    aes(slope = slope, intercept = intercept, color = continent),
+    size = 2
+  ) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
+  guides(color = guide_legend(title = "Kontinenty:"))
 dev.off()
 
 # table of average BaS and BaM per continent
