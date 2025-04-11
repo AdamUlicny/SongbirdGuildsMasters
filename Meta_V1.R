@@ -790,20 +790,27 @@ continent_labels <- c(
 )
 
 library(lmodel2)
-# Calculate Linear Model type 2 slopes
-regression_lines <- specialization_method_substrate %>%
-  group_by(continent) %>%
-  group_split() %>%
-  map_df(~{
-    model <- lmodel2(BaS ~ BaM, data = .x, nperm = 0)
-    slope <- model$regression.results[2, "Slope"]  # [2,] = MA
-    intercept <- model$regression.results[2, "Intercept"]
-    data.frame(
-      continent = unique(.x$continent),
-      slope = slope,
-      intercept = intercept
-    )
-  })
+continents <- unique(specialization_method_substrate$continent)
+
+# Loop over continents and perform RMA
+rma_results <- lapply(continents, function(cont) {
+  sub_data <- subset(specialization_method_substrate, continent == cont)
+  model <- lmodel2(BaM ~ BaS, data = sub_data, nperm = 0)
+  list(
+    continent = cont,
+    rma = model$regression.results[model$regression.results$Method == "RMA", ],
+    r = model$r,
+    pvalue = model$P.param
+  )
+})
+
+rma_lines <- do.call(rbind, lapply(rma_results, function(res) {
+  data.frame(
+    continent = res$continent,
+    slope = res$rma$Slope,
+    intercept = res$rma$Intercept
+  )
+}))
 
 
 
