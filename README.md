@@ -26,6 +26,8 @@ There are multiple kinds of datasets included:
 - birdtree phylogeny
 - https://birdtree.org/
 
+# Codendrogram of phylogeny and foraging similarities
+![codendrogram](plots/dendrogram_plot_small.svg)
 
 # Poster with more information about the project
 ![poster](resources/poster_v4.png)
