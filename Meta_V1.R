@@ -790,12 +790,12 @@ continent_labels <- c(
 )
 
 library(lmodel2)
-continents <- unique(specialization_method_substrate$continent)
+continents <- c("Asia", "Australia", "Europe", "North_America")
 
 # Loop over continents and perform RMA
 rma_results <- lapply(continents, function(cont) {
   sub_data <- subset(specialization_method_substrate, continent == cont)
-  model <- lmodel2(BaM ~ BaS, data = sub_data, nperm = 0)
+  model <- lmodel2(BaS ~ BaM, data = sub_data, range.x = "relative", range.y = "relative", nperm = 0)
   list(
     continent = cont,
     rma = model$regression.results[model$regression.results$Method == "RMA", ],
@@ -804,11 +804,12 @@ rma_results <- lapply(continents, function(cont) {
   )
 })
 
+
 rma_lines <- do.call(rbind, lapply(rma_results, function(res) {
   data.frame(
-    continent = res$continent,
-    slope = res$rma$Slope,
-    intercept = res$rma$Intercept
+    continent = as.character(res$continent),
+    slope = as.numeric(res$rma[["Slope"]]),
+    intercept = as.numeric(res$rma[["Intercept"]])
   )
 }))
 
@@ -835,7 +836,7 @@ ggplot(specialization_method_substrate, aes(x = BaM, y = BaS, color = continent)
   ) +
   theme(legend.position = "bottom") +
   geom_abline(
-    data = regression_lines,
+    data = rma_lines,
     aes(slope = slope, intercept = intercept, color = continent),
     size = 2
   ) +
@@ -909,4 +910,28 @@ plot3d(
 summary(pcoa_bray)
 
 
-########## 
+# Combine Mantel statistic results into a table using this template: mantel_Asia_P_G1[["statistic"]]
+mantel_results <- data.frame(
+  Test = c("Global_P_G1", "Global_P_M", "Global_M_G1",
+           "Asia_P_G1", "Asia_P_M", "Asia_M_G1",
+           "Australia_P_G1", "Australia_P_M", "Australia_M_G1",
+           "Europe_P_G1", "Europe_P_M", "Europe_M_G1",
+           "North_America_P_G1", "North_America_P_M", "North_America_M_G1"),
+  Statistic = c(
+    mantel_Global_P_G1[["statistic"]],
+    mantel_Global_P_M[["statistic"]],
+    mantel_Global_M_G1[["statistic"]],
+    mantel_Asia_P_G1[["statistic"]],
+    mantel_Asia_P_M[["statistic"]],
+    mantel_Asia_M_G1[["statistic"]],
+    mantel_Australia_P_G1[["statistic"]],
+    mantel_Australia_P_M[["statistic"]],
+    mantel_Australia_M_G1[["statistic"]],
+    mantel_Europe_P_G1[["statistic"]],
+    mantel_Europe_P_M[["statistic"]],
+    mantel_Europe_M_G1[["statistic"]],
+    mantel_North_America_P_G1[["statistic"]],
+    mantel_North_America_P_M[["statistic"]],
+    mantel_North_America_M_G1[["statistic"]]))
+    
+  
