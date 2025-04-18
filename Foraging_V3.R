@@ -489,12 +489,12 @@ colLab <- function(n) {
 dendro_bray_aes = dendrapply(dendro_bray, colLab)
 
 ### plot guilds, colors and legend
-par(mar=c(5,1,1,12))
-plot(dendro_bray_aes, main = "", type = "rectangle", horiz = T, xlab = "Bray-Curtis vzdálenost")
+par(mar=c(5,1,1,12), cex=1.5)
+plot(dendro_bray_aes, main = "", type = "rectangle", horiz = T, xlab = "Bray-Curtisova vzdálenost", )
  legend("topleft", 
        legend = labelLegend, 
        col = labelColors, 
-       pch = c(20,20,20,20), bty = "y",  pt.cex = 1.5, cex = 1.2 , 
+       pch = c(20,20,20,20), bty = "n",  pt.cex = 1, cex = 1 , 
        text.col = "black", horiz = FALSE,
        title="Gildy",
        inset = c(0, 0.05))
@@ -579,6 +579,7 @@ trait_labels<-c("Glean", "Probe", "Hang-glean", "Manipulation", "Hover-snatch", 
 
 traits_cz <- phylo4d( x=dendro_bray_traits, tip.data=matrix_cz_prop )
 dev.off()
+par(cex=1.5)
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=1, cex.label=0.6, cex.legend=0.8, col = "red", var.label=trait_labels, main="")
 
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds CZ")

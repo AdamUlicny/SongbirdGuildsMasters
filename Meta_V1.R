@@ -15,6 +15,7 @@ library(igraph)
 library(phylobase)
 library(phylosignal)
 library(adephylo)
+library(scales)
 
 # Set working directory
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
