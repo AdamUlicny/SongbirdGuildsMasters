@@ -20,6 +20,7 @@ library(scales)
 library(phylobase)
 library(phylosignal)
 library(adephylo)
+
 ################################### Load data ###########################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 data_23 <- read_excel("./data/behav_data_23.xlsx")
@@ -32,8 +33,8 @@ data_bodovka <- data_bodovka %>%
 
 unique_species <- data_bodovka %>%
   select(sp_orig) %>%
-  distinct() %>%
-  nrow()
+  distinct()
+
 # rename species back from birdlife to eBird names, correct mistakes
 data_bodovka$sp_orig<-gsub("_", " ", data_bodovka$sp_orig)
 data_bodovka$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", data_bodovka$sp_orig)
