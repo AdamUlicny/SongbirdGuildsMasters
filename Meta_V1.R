@@ -68,8 +68,8 @@ sp<-method_substrate_subset%>%
 phylo_meta <-clootl::extractTree(species=sp,
                          taxonomy_year=2021, version="1.4")
 
-phylo_citations<-getCitations(tree=phylo_meta)
-write.csv(phylo_citations, "resources/phylo_citations.csv")
+#phylo_citations<-getCitations(tree=phylo_meta)
+#write.csv(phylo_citations, "resources/phylo_citations.csv")
 
 
 
@@ -485,7 +485,7 @@ phylo_order <-(labels(dendro_meta_phylo))
 final_colors <- label_colors[match(phylo_order, names(label_colors))]
 
 plot(dendro_meta_phylo, horiz=T)
-svg("dendrogram_plot_small.svg", width = 30, height = 30) # save as svg
+#("dendrogram_plot_small.svg", width = 30, height = 30) # save as svg
 tanglegram(dendro_meta_phylo,dendro_meta_bray,
            color_lines = final_colors,
              highlight_distinct_edges  = FALSE,
@@ -508,7 +508,7 @@ legend("bottomleft",
        horiz = FALSE,
        title = "Barvy druhových jmen dle výskytu",
        inset = c(0, 0.05))
-dev.off()
+#dev.off()
 
 mantel_Global_P_G1 <- mantel(dist_Bray_Global, phylo_meta_mantel, method = "spearman", permutations = 999)
 print("Results of Mantel test between Bray-Curtis Guilds and Phylogeny")
@@ -604,7 +604,7 @@ color_cluster_australia<-color_cluster(dendro_Australia_bray_step1side[[1]], den
 color_cluster_europe<-color_cluster(dendro_Europe_bray_step1side[[1]], dendro_Europe_phylo, n_clusters=6)
 color_cluster_north_america<-color_cluster(dendro_North_America_bray_step1side[[1]], dendro_North_America_phylo, n_clusters=6)
 #### Asia
-svg("Asia_dendrogram.svg", width = 10, height = 10) # save as svg
+#svg("Asia_dendrogram.svg", width = 10, height = 10) # save as svg
 tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            color_lines = color_cluster_asia,
            common_subtrees_color_lines = TRUE,
@@ -620,7 +620,7 @@ tanglegram(dendro_Asia_phylo, dendro_Asia_bray_step1side[[1]],
            main="Asie",
            hang=F, axes = F)%>%
   entanglement()
-dev.off() 
+#dev.off() 
 
 
 mantel_Asia_P_G1 <- mantel(dist_Bray_Asia, phylo_Asia_mantel, method = "spearman", permutations = 999)
@@ -630,7 +630,7 @@ print(mantel_Asia_P_M)
 mantel_Asia_M_G1 <- mantel(dist_morpho_Asia, dist_Bray_Asia, method = "spearman", permutations = 999)
 print(mantel_Asia_M_G1)
 #### Australia
-svg("Australia_dendrogram.svg", width = 10, height = 12)
+#svg("Australia_dendrogram.svg", width = 10, height = 12)
 tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
            color_lines = color_cluster_australia,
            center=T,
@@ -645,7 +645,7 @@ tanglegram(dendro_Australia_phylo, dendro_Australia_bray_step1side[[1]],
            main="Austrálie",
            hang=F, axes=F)%>%
   entanglement() 
-dev.off() # lower entanglement = better readability
+#dev.off() 
 
 mantel_Australia_P_G1 <- mantel(dist_Bray_Australia, phylo_Australia_mantel, method = "spearman", permutations = 999)
 print(mantel_Australia_P_G1)
@@ -655,7 +655,7 @@ mantel_Australia_M_G1 <- mantel(dist_morpho_Australia, dist_Bray_Australia, meth
 print(mantel_Australia_M_G1)
 
 #### Europe
-svg("Europe_dendrogram.svg", width = 10, height = 6)
+#svg("Europe_dendrogram.svg", width = 10, height = 6)
 tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
            color_lines = color_cluster_europe,
            center=T,
@@ -670,7 +670,7 @@ tanglegram(dendro_Europe_phylo, dendro_Europe_bray_step1side[[1]],
            main="Evropa",
            hang=F, axes=F)%>%
   entanglement()# lower entanglement = better readability
-dev.off()
+#dev.off()
 
 mantel_Europe_P_G1 <- mantel(dist_Bray_Europe, phylo_Europe_mantel, method = "spearman", permutations = 999)
 print(mantel_Europe_P_G1)
@@ -680,7 +680,7 @@ mantel_Europe_M_G1 <- mantel(dist_morpho_Europe, dist_Bray_Europe, method = "spe
 print(mantel_Europe_M_G1)
 
 #### North America
-svg("North_America_dendrogram.svg", width = 10, height = 8)
+#svg("North_America_dendrogram.svg", width = 10, height = 8)
 tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
            color_lines = color_cluster_north_america,
            center=T,
@@ -695,7 +695,7 @@ tanglegram(dendro_North_America_phylo, dendro_North_America_bray_step1side[[1]],
            main="Severní Amerika",
            hang=F, axes = F)%>%
   entanglement() # lower entanglement = better readability
-dev.off()
+#dev.off()
 mantel_North_America_P_G1 <- mantel(dist_Bray_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
 print(mantel_North_America_P_G1)
 mantel_North_America_P_M <- mantel(dist_morpho_North_America, phylo_North_America_mantel, method = "spearman", permutations = 999)
@@ -730,16 +730,16 @@ par(oma=c(6,2,2,0))
 table.phylo4d(traits_Global, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds Global")
 
 
-svg("table_Asia.svg", width = 6, height = 9)
+#svg("table_Asia.svg", width = 6, height = 9)
 table.phylo4d(traits_Asia, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.4, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Asie")
-dev.off()
+#dev.off()
 
-svg("gridplot_global.svg", width = 20, height = 25) # save as svg
+#svg("gridplot_global.svg", width = 20, height = 25) # save as svg
 gridplot.phylo4d(traits_Global, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", 
                  tree.ratio=0.15, trait.bg.col = "white", show.box = F, trait.labels = trait_labels, 
                  grid.vertical=T, grid.horizontal=F, main="", cex.main=1.2, 
                  trait.cex=1.2, cell.col = white2red(200))
-dev.off()
+#dev.off()
 ################## Per-Continent Guild visualization ############################
 gridplot.phylo4d(traits_Asia, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Asia", cex.main=1.2, cell.col = white2red(200))
 
@@ -817,7 +817,7 @@ rma_lines <- do.call(rbind, lapply(rma_results, function(res) {
 
 
 # scatterplot of BaS and BaM with color codes based on continent
-svg("specialization_method_substrate.svg", width = 10, height = 10) # save as svg
+#svg("specialization_method_substrate.svg", width = 10, height = 10) # save as svg
 ggplot(specialization_method_substrate, aes(x = BaM, y = BaS, color = continent)) +
   geom_point(size = 5) +
   scale_color_manual(values = continent_colors, labels = continent_labels) +
@@ -843,7 +843,7 @@ ggplot(specialization_method_substrate, aes(x = BaM, y = BaS, color = continent)
   ) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +
   guides(color = guide_legend(title = "Kontinenty:"))
-dev.off()
+#dev.off()
 
 # table of average BaS and BaM per continent
 specialization_method_substrate %>%
@@ -910,8 +910,7 @@ plot3d(
 
 summary(pcoa_bray)
 
-
-# Combine Mantel statistic results into a table using this template: mantel_Asia_P_G1[["statistic"]]
+# Mantel test results
 mantel_results <- data.frame(
   Test = c("Global_P_G1", "Global_P_M", "Global_M_G1",
            "Asia_P_G1", "Asia_P_M", "Asia_M_G1",

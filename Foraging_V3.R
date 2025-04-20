@@ -369,37 +369,29 @@ plot(Ba_substrate ~ Ba_method, xlim = c(0.3, 1), ylim = c(0.3, 1), ylab="Substra
 abline(lm(Ba_substrate ~ Ba_method, levins_method_substrate), lw=1.3)
 abline(c(0,1), lty=2, col="red")
 
-# ggplot
+# version with RMA
+rma_cz<-lmodel2(Ba_substrate ~ Ba_method, data = levins_method_substrate, nperm = 0,range.x = "relative", range.y = "relative")
+rma_cz<- data.frame(rma_cz$regression.results[rma_cz$regression.results$Method == "RMA", ])
+
+# scatterplot
 graph_specialization <- ggplot(levins_method_substrate, aes(x = Ba_method, y = Ba_substrate)) +
   geom_point(size = 3) +
   labs(x = "Specializace na metodu", y = "Specializace na substrát") +
-  #geom_text(aes(label = sp_orig), vjust = -0.5, hjust = 0.5, size = 3) +  
-  geom_smooth(method = "lm", color = "black", se = F, size = 1) + 
+  geom_abline(
+    data = rma_cz,
+    aes(slope = Slope, intercept = Intercept),
+    color = "black",
+    size = 2
+  ) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  
   theme_classic()  +
   scale_x_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1)) +  
   scale_y_continuous(labels = label_comma(decimal.mark = ","), limits = c(0.3, 1))  +
   theme(axis.title = element_text(size = 20))
+
+#svg("./plots/graph_specialization_cz.svg", width = 7, height = 7)
 plot(graph_specialization)
-
-# version with labels and lines
-graph_specialization2 <- ggplot(levins_method_substrate, aes(x = Ba_method, y = Ba_substrate)) +
-  geom_point(size = 3) +
-  labs(x = "Specializace na metodu", y = "Specializace na substrát") +
-  xlim(0.3, 1) +
-  ylim(0.3, 1) +
-  geom_smooth(method = "lm", color = "black", se = F, size = 1) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red") +  
-  geom_text_repel(aes(label = sp_orig), size = 5, force = 1000, segment.size = 0.5, segment.color = "grey50", max.overlaps = Inf) + 
-  theme_classic()  +
-  scale_x_continuous(labels = label_comma(decimal.mark = ",")) +
-  scale_y_continuous(labels = label_comma(decimal.mark = ","))+
-  theme(axis.title = element_text(size = 20))
-
-plot(graph_specialization2)
-
-# linear regression
-summary(lm(Ba_substrate ~ Ba_method, levins_method_substrate)) # not important here
+#dev.off()
 
 # simple correlation test
 cor.test(levins_method_substrate$Ba_method, levins_method_substrate$Ba_substrate, method = "pearson")
@@ -500,37 +492,6 @@ plot(dendro_bray_aes, main = "", type = "rectangle", horiz = T, xlab = "Bray-Cur
        title="Gildy",
        inset = c(0, 0.05))
 
-#################### Tanglegram ############################
-
-set.seed(12345)
-dendlist(dendro_bray, dendro_phylo)%>%
-  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="behavior",
-             main_right="phylogeny",
-             hang=F)
-mantel_CZ <- mantel(dist_Bray_North_America, phylo_North_America, method = "spearman", permutations = 9999)
-print(mantel_North_America)
-# Using Jaccard
-
-dendlist(dendro_bray, dendro_jaccard)%>%
-  dendextend::untangle(method="random", R=100)%>%####### Crucial step to produce human readable codendrograms! Use lower R on slower machines.
-  dendextend::untangle(method="step2side")%>%
-  tanglegram(common_subtrees_color_lines = TRUE, # Do NOT include "sort=T" argument if using untangle before (sort overrides it)
-             highlight_distinct_edges  = FALSE,
-             highlight_branches_lwd=FALSE,
-             margin_inner=10,
-             margin_outer=7,
-             lwd=3,
-             main_left="Bray-Curtis",
-             main_right="Jaccard",
-             hang=F)
 
 ################## Phylogenetic signal ############################
 dendro_bray_traits  <- as.phylo(dendro_bray_aes)
@@ -579,11 +540,11 @@ matrix_cz_prop <-method_substrate_cz%>%
 trait_labels<-c("Glean", "Probe", "Hang-glean", "Manipulation", "Hover-snatch", "Flycatch", "Snatch", "Pounce", "Kůra", "Listy", "Půda", "Vzduch", "Ostatní")
 
 traits_cz <- phylo4d( x=dendro_bray_traits, tip.data=matrix_cz_prop )
-dev.off()
+
 par(cex=1.5)
+
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=1, cex.label=0.6, cex.legend=0.8, col = "red", var.label=trait_labels, main="")
 
 table.phylo4d(traits_cz, treetype="phylogram", symbol="circles", ratio.tree=0.2, center=F, scale=F, legend=F, grid=T, box=F, cex.symbol=0.3, cex.label=0.6, cex.legend=0.8, var.label=trait_labels, main="Guilds CZ")
-
 
 gridplot.phylo4d(traits_cz, tree.ladderize=T, center=F, scale=F, tree.type="phylogram", tree.ratio=0.15, trait.bg.col = "white", show.box = T, trait.labels = trait_labels, main="Guilds Global", cex.main=1.2, cell.col = white2red(200))
