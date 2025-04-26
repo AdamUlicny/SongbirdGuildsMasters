@@ -66,7 +66,7 @@ sp<-method_substrate_subset%>%
   pull(Sp_eBird)
 
 phylo_meta <-clootl::extractTree(species=sp,
-                         taxonomy_year=2021, version="1.4")
+                         taxonomy_year=2021, version="1.4") # if this throws an error, check version of clootl, the commands have changed
 
 #phylo_citations<-getCitations(tree=phylo_meta)
 #write.csv(phylo_citations, "resources/phylo_citations.csv")

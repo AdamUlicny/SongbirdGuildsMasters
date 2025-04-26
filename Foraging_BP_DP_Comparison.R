@@ -25,7 +25,6 @@ data_substrate_21 <- data_21 %>%
   select(sp_orig, substrate) %>%
   na.omit(F)
 
-# combine data_method_21 and data_substrate_21 without duplicating the sp_orig columns using bind_cols
 data_long_21 <- bind_cols(data_method_21, data_substrate_21)
 
 data_long_21 <- data_long_21%>%
