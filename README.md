@@ -23,8 +23,8 @@ There are multiple kinds of datasets included:
 - https://onlinelibrary.wiley.com/doi/full/10.1111/ele.13898
 
 **Phylogenetic data**
-- birdtree phylogeny
-- https://birdtree.org/
+- using the CLOOTL package
+- https://github.com/eliotmiller/clootl 
 
 # Codendrogram of phylogeny and foraging similarities
 ![codendrogram_phylo_behav](plots/dendrogram_plot_global.svg)
