@@ -7,6 +7,7 @@ positions <- data.frame(
 )
 
 # Change _Asia_ to whatever else. Need prepared DF's from Meta.R
+# (I didn't want to write a function or copy this code for each continent, instead ctrl + f and replace _Asia_ with _Europe_ etc.)
 edges <- data.frame(
   from = c("Fylogeneze", "Morfologie", "Gildy"),
   to = c("Gildy", "Fylogeneze", "Morfologie"),

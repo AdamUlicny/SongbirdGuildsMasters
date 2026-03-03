@@ -703,7 +703,7 @@ print(mantel_North_America_P_M)
 mantel_North_America_M_G1 <- mantel(dist_morpho_North_America, dist_Bray_North_America, method = "spearman", permutations = 999)
 print(mantel_North_America_M_G1)
 ############### Network graphs #########################
-# REWORK THIS PART ACCORDING TO MANTEL_GRAPH.R
+# REWORK THIS PART ACCORDING TO MANTEL_GRAPHS.R
 ###################### Global Mantel Graph ####################################
 
 

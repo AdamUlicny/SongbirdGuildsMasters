@@ -1,4 +1,4 @@
-######### Study area maú
+######### Study area map
 library(sf) 
 library(ggplot2)
 library(ggspatial)
