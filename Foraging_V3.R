@@ -89,7 +89,7 @@ data_cz_long <- data_cz_long %>%
 # remove "_" and replace with " " in sp_orig
 data_cz_long$sp_orig <- gsub("_", " ", data_cz_long$sp_orig)
 
-# replace all "Parus caeruleus" with "Cyanistes caeruleus"
+# replace all "Parus caeruleus" with "Cyanistes caeruleus" etc
 data_cz_long$sp_orig <- gsub("Parus caeruleus", "Cyanistes caeruleus", data_cz_long$sp_orig)
 data_cz_long$sp_orig <- gsub("Carduelis chloris", "Chloris chloris", data_cz_long$sp_orig)
 data_cz_long$sp_orig <- gsub("Phoenicorus phoenicorus", "Phoenicurus phoenicurus", data_cz_long$sp_orig)
